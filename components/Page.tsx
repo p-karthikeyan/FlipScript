@@ -20,23 +20,28 @@ export function Page({
   const selectionOffset = useBookStore((s) => s.selectionOffset);
   const clearFocus = useBookStore((s) => s.clearFocus);
 
+  const lastSentContent = useRef(content);
   const editableRef = useRef<HTMLDivElement | null>(null);
   const mirrorRef = useRef<HTMLDivElement | null>(null);
   const [isFocused, setIsFocused] = useState(false);
 
-  // Synchronize content to DOM without triggering re-render if focused.
+  // Synchronize content to DOM.
   useEffect(() => {
     if (!editable) return;
-    if (isFocused) return;
-    if (editableRef.current && editableRef.current.innerText !== content) {
-      editableRef.current.innerText = content;
+    // Only update if the content in the store is different from what we last set
+    // AND it's strictly different from what's currently in the DOM.
+    if (editableRef.current && content !== lastSentContent.current) {
+      if (editableRef.current.innerHTML !== content) {
+        editableRef.current.innerHTML = content;
+        lastSentContent.current = content;
+      }
     }
-  }, [content, editable, isFocused]);
+  }, [content, editable]);
 
   // Sync content to Mirror for measurement.
   useEffect(() => {
-    if (mirrorRef.current && mirrorRef.current.innerText !== content) {
-      mirrorRef.current.innerText = content;
+    if (mirrorRef.current && mirrorRef.current.innerHTML !== content) {
+      mirrorRef.current.innerHTML = content;
     }
   }, [content]);
 
@@ -47,14 +52,9 @@ export function Page({
       const selection = window.getSelection();
       const range = document.createRange();
       
-      // Calculate where to put the cursor if we have an offset.
-      if (selectionOffset > 0 && editableRef.current.firstChild) {
-         range.setStart(editableRef.current.firstChild, selectionOffset);
-         range.collapse(true);
-      } else {
-         range.selectNodeContents(editableRef.current);
-         range.collapse(false); // Default to end
-      }
+      // Focus at the end of the HTML content
+      range.selectNodeContents(editableRef.current);
+      range.collapse(false);
       
       selection?.removeAllRanges();
       selection?.addRange(range);
@@ -67,40 +67,50 @@ export function Page({
     const mirror = mirrorRef.current;
     if (!el || !mirror) return;
 
-    // Update mirror's text to current input
-    mirror.innerText = el.innerText;
+    // Update mirror to current content
+    mirror.innerHTML = el.innerHTML;
     
-    // Check for overflow on Mirror
+    // Check for overflow
     if (mirror.scrollHeight > el.clientHeight + 4) {
-      const fullText = el.innerText;
-      const chunks = fullText.split(/(\s+)/); // Keep delimiters
-      
-      // Find the split point that fits
-      let splitIdx = chunks.length;
-      const testMirror = mirror.cloneNode(true) as HTMLDivElement;
+      // Find the split point in HTML
+      // We use a binary search approach on child nodes for performance
+      const nodes = Array.from(el.childNodes);
+      const testMirror = mirror.cloneNode(false) as HTMLDivElement;
       testMirror.style.visibility = 'hidden';
       testMirror.style.position = 'absolute';
       testMirror.style.top = '-9999px';
       document.body.appendChild(testMirror);
 
-      for (let i = chunks.length; i >= 0; i--) {
-         testMirror.innerText = chunks.slice(0, i).join('');
+      let splitIdx = nodes.length;
+      for (let i = nodes.length; i >= 0; i--) {
+         testMirror.innerHTML = '';
+         for(let j=0; j<i; j++) {
+            testMirror.appendChild(nodes[j].cloneNode(true));
+         }
          if (testMirror.scrollHeight <= el.clientHeight) {
             splitIdx = i;
             break;
          }
       }
+      
+      const remainingDiv = document.createElement('div');
+      const overflowDiv = document.createElement('div');
+      for(let i=0; i<splitIdx; i++) remainingDiv.appendChild(nodes[i].cloneNode(true));
+      for(let i=splitIdx; i<nodes.length; i++) overflowDiv.appendChild(nodes[i].cloneNode(true));
+
       document.body.removeChild(testMirror);
 
-      const remaining = chunks.slice(0, splitIdx).join('');
-      const overflow = chunks.slice(splitIdx).join('').trimStart();
+      const remaining = remainingDiv.innerHTML;
+      const overflow = overflowDiv.innerHTML;
 
       if (overflow.length > 0) {
+        lastSentContent.current = remaining;
         pushOverflow(pageId, remaining, overflow);
-        el.innerText = remaining;
+        el.innerHTML = remaining;
       }
     } else {
-      updatePage(pageId, el.innerText);
+      lastSentContent.current = el.innerHTML;
+      updatePage(pageId, el.innerHTML);
     }
   };
 

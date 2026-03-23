@@ -19,7 +19,7 @@ const patrickHand = Patrick_Hand({
 });
 
 export const metadata: Metadata = {
-  title: "StoryWriter",
+  title: "FlipScript",
   description: "Guest-mode story writer with open-book UI and page flip animation.",
 };
 
