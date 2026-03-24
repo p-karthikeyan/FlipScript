@@ -39,6 +39,8 @@ type BookActions = {
   goPrev: () => void;
   clearFocus: () => void;
   setPageIndex: (index: number) => void;
+  setBook: (book: { title: string, pages: Page[] }) => void;
+  setPages: (pages: Page[]) => void;
 };
 
 export type BookStore = Book & BookActions;
@@ -147,16 +149,27 @@ export const useBookStore = create<BookStore>()(
       },
 
       setPageIndex: (index) => {
-        // Ensure index is even (left of spread)
         const normalized = index % 2 === 0 ? index : index - 1;
         set({ currentPageIndex: Math.max(0, normalized) });
       },
 
+      setBook: (book) => {
+        set({
+          title: book.title,
+          pages: book.pages.length > 0 ? book.pages : createDefaultPages(),
+          currentPageIndex: 0,
+          focusedPageId: null,
+          selectionOffset: 0,
+        });
+      },
+
+      setPages: (pages) => set({ pages }),
+
       clearFocus: () => set({ focusedPageId: null, selectionOffset: 0 }),
     }),
     {
-      name: 'storywriter_v2', // New version marker for fresh start
-      version: 2,
+      name: 'storywriter_v3', // New version for DB sync
+      version: 3,
     },
   ),
 );

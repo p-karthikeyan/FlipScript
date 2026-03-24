@@ -4,15 +4,26 @@ import { useBookStore } from '@/store/useBookStore';
 import { downloadBookAsPdf } from '@/lib/pdfExport';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { LayoutGrid, LogOut, Library } from 'lucide-react';
+import { AuthModal } from './AuthModal';
 
 export function FloatingNavbar() {
   const title = useBookStore((s) => s.title);
   const setTitle = useBookStore((s) => s.setTitle);
   const newBook = useBookStore((s) => s.newBook);
+  
+  const { data: session, status } = useSession();
   const [downloading, setDownloading] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const handleDownload = async () => {
+    if (status !== 'authenticated') {
+      setIsAuthModalOpen(true);
+      return;
+    }
     if (downloading) return;
     setDownloading(true);
     try {
@@ -52,6 +63,14 @@ export function FloatingNavbar() {
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
             </button>
+            <Link
+              href="/dashboard"
+              className="px-3 h-8 flex items-center justify-center gap-2 rounded-lg bg-amber-900/10 border border-amber-900/20 text-amber-500/60 hover:text-amber-500 hover:bg-amber-900/20 hover:border-amber-700/40 transition-all font-bold text-[10px] uppercase tracking-widest"
+              title="Return to Library"
+            >
+              <Library className="w-3.5 h-3.5" />
+              <span>Library</span>
+            </Link>
           </div>
 
           {/* Group: Text Styling */}
@@ -117,6 +136,13 @@ export function FloatingNavbar() {
           </div>
         </div>
       </nav>
+
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)}
+        title="Permission to Export"
+        description="To export your manuscript, please verify your identity with Google. This ensures your work is stored in the archives."
+      />
     </>
   );
 }

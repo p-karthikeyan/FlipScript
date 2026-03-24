@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Patrick_Hand } from "next/font/google";
+import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,8 +20,8 @@ const patrickHand = Patrick_Hand({
 });
 
 export const metadata: Metadata = {
-  title: "FlipScript",
-  description: "Guest-mode story writer with open-book UI and page flip animation.",
+  title: "FlipScript | Digital Manuscript Engine",
+  description: "Immersive book creation with realistic page flips and secure Google SSO storage.",
 };
 
 export default function RootLayout({
@@ -35,7 +36,9 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-black" suppressHydrationWarning>
-        {children}
+        <SessionProvider>
+          {children}
+        </SessionProvider>
       </body>
     </html>
   );
