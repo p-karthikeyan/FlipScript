@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FlipScript: The Digital Manuscript Engine
 
-## Getting Started
+**FlipScript** is an immersive, distraction-free writing environment designed to evoke the tactile feeling of a physical journal. Built with a "handwritten" aesthetic and realistic page-turn physics, it serves as a secure sanctuary for your thoughts, stories, and manuscripts.
 
-First, run the development server:
+---
 
+## ✨ Key Features
+
+- **📖 Immersive Experience**: Realistic 3D-like page flip animations and physics that mimic physical journals.
+- **🖊️ Handwritten Aesthetic**: Elegant "ink-on-parchment" design using refined typography and muted sepia tones.
+- **🔐 Secure Archive (Google SSO)**: Seamless authentication via Google. No passwords required—just sign in and your manuscripts are instantly synced to your vault.
+- **💾 Permanent Vault (MongoDB)**: Automatic, debounced cloud storage. Every letter you type is preserved in your private archive.
+- **🚶 Guest Mode**: Start writing immediately without an account. Sign in only when you're ready to export or commit to the archive.
+- **🖼️ Export to PDF**: Convert your digital manuscript into a professional PDF ready for sharing.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Frontend**: [Next.js 16](https://nextjs.org/) (App Router), [React 19](https://reactjs.org/)
+- **Styling**: [TailwindCSS 4](https://tailwindcss.com/) & [Framer Motion 12](https://www.framer.com/motion/)
+- **Auth**: [Auth.js (NextAuth v5)](https://authjs.dev/)
+- **Database**: [MongoDB](https://www.mongodb.com/) & [Mongoose](https://mongoosejs.com/)
+- **State**: [Zustand](https://zustand-demo.pmnd.rs/) with Persistence
+- **3D/Physics**: [Three.js](https://threejs.org/) & [React Three Fiber](https://r3f.docs.pmnd.rs/)
+
+---
+
+## 🚀 Getting Started
+
+To run FlipScript locally, follow these steps:
+
+### 1. Prerequisites
+- Node.js 20.9+
+- A Google Cloud Console project for OAuth (Google SSO)
+- A MongoDB cluster (Atlas or local)
+
+### 2. Installation
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/your-username/flipscript.git
+cd flipscript
+npm install --legacy-peer-deps
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 3. Environment Setup
+Rename `.env.example` to `.env.local` and fill in the required variables:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- `MONGODB_URI`: Your MongoDB connection string.
+- `AUTH_SECRET`: Generate using `openssl rand -base64 32`.
+- `AUTH_GOOGLE_ID`: Your Google OAuth Client ID.
+- `AUTH_GOOGLE_SECRET`: Your Google OAuth Client Secret.
+- `AUTH_URL`: `http://localhost:3000` (for local dev).
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 4. Run Development Server
+```bash
+npm run dev
+```
+Navigate to `http://localhost:3000` to start writing.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 📂 Project Structure
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- `/app`: App Router pages and API routes.
+- `/components`: Reusable UI components (BookViewer, PageFlip, FloatingNavbar, AuthModal).
+- `/models`: Mongoose schemas for MongoDB.
+- `/store`: Zustand state management for book state.
+- `/lib`: Utility functions (DB connection, PDF export).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+---
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📜 License
+Dedicated to the craft of writing. &copy; MCMXXVI FlipScripts Labs.
