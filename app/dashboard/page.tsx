@@ -85,7 +85,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-3">
             {session?.user?.image && (
               <div className="relative group flex-shrink-0">
-                <img src={session.user.image} className="w-10 h-10 rounded-full border border-amber-900/20 transition-all group-hover:border-amber-700/60" alt="Profile" />
+                <img src={session.user.image} referrerPolicy="no-referrer" className="w-10 h-10 rounded-full border border-amber-900/20 transition-all group-hover:border-amber-700/60" alt="Profile" />
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-amber-600 rounded-full border-2 border-[#0a0a0a]" />
               </div>
             )}
@@ -160,7 +160,7 @@ export default function Dashboard() {
                 href={`/editor/${book._id}`}
                 className="w-full py-4 rounded-2xl bg-amber-900/10 border border-amber-900/20 text-amber-200/90 text-xl font-bold hover:bg-amber-800/20 hover:border-amber-700/40 transition-all flex items-center justify-center gap-2 group/btn"
               >
-                Open Page <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform opacity-40" />
+                Open Book <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform opacity-40" />
               </Link>
             </motion.div>
           ))}
