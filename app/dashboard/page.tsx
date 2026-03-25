@@ -83,7 +83,7 @@ export default function Dashboard() {
             <Library className="w-8 h-8 text-amber-600/60" />
           </div>
           <div>
-            <h1 className="text-5xl font-bold tracking-tight text-amber-50/90 leading-none">The Archive</h1>
+            <h1 className="text-5xl font-bold tracking-tight text-amber-50/90 leading-none">Library</h1>
             <p className="text-amber-100/20 text-xl mt-1">Preserve your books for eternity.</p>
           </div>
         </div>

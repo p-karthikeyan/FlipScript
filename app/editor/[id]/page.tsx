@@ -73,8 +73,8 @@ export default function EditorPage() {
 
   if (loading || status === "loading") {
     return (
-      <div className="h-screen w-full bg-[#121212] flex flex-col items-center justify-center gap-6">
-        <div className="font-bold tracking-[0.5em] text-white/20 uppercase text-xs animate-pulse">
+      <div className="h-screen w-full bg-[#0a0a0a] flex flex-col items-center justify-center gap-6">
+        <div className="font-bold tracking-[0.5em] text-amber-100/20 uppercase text-xs animate-pulse">
           Syncing book with vault...
         </div>
         <button
@@ -88,16 +88,19 @@ export default function EditorPage() {
   }
 
   return (
-    <div className="relative h-screen w-full bg-[#121212] text-white flex flex-col overflow-hidden">
+    <div className="relative h-screen w-full bg-[#0a0a0a] text-[#d4d4d4] font-sans selection:bg-amber-900/30 flex flex-col overflow-hidden">
       {/* Background Ambience */}
-      <div className="absolute inset-0 bg-[radial-gradient(1000px_circle_at_20%_20%,rgba(59,130,246,0.1),transparent_60%),radial-gradient(900px_circle_at_80%_10%,rgba(168,85,247,0.08),transparent_55%)] pointer-events-none" />
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-900/10 blur-[150px] rounded-full" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[radial-gradient(circle_at_center,rgba(150,75,0,0.02)_1px,transparent_1px)] bg-[length:60px_60px] opacity-20" />
+      </div>
 
       {/* Centered Floating Navbar */}
       <FloatingNavbar />
 
       {/* Main Experience: Center-focused Book */}
-      <main className="relative flex-1 flex flex-col items-center justify-center px-4 overflow-auto scrollbar-hide">
-        <div className="w-full h-full flex items-center justify-center">
+      <main className="relative flex-1 flex flex-col items-center px-4 pt-20 pb-16 overflow-auto scrollbar-hide">
+        <div className="my-auto w-full flex items-center justify-center">
           <BookViewer />
         </div>
       </main>

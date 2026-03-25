@@ -9,6 +9,58 @@ import { useRouter } from 'next/navigation';
 import { LayoutGrid, LogOut, Library } from 'lucide-react';
 import { AuthModal } from './AuthModal';
 
+function CustomDropdown({ options, value, onChange, className }: any) {
+  const [open, setOpen] = useState(false);
+  const selectedLabel = options.find((o: any) => o.value === value)?.label || value;
+
+  return (
+    <div className="relative">
+      <button
+        onMouseDown={(e) => { e.preventDefault(); setOpen(!open); }}
+        className={`px-3 flex items-center justify-between gap-2.5 rounded-lg hover:bg-amber-900/20 text-amber-100/40 hover:text-amber-400 transition-colors bg-transparent text-[11px] ${className}`}
+      >
+        <span>{selectedLabel}</span>
+        <svg className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <>
+            <div 
+              className="fixed inset-0 z-[190]" 
+              onMouseDown={(e) => { e.preventDefault(); setOpen(false); }} 
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              className="absolute top-full mt-3 left-0 min-w-full whitespace-nowrap bg-[#0f0f0f] border border-amber-900/30 rounded-xl shadow-2xl overflow-hidden z-[200]"
+            >
+              <div className="flex flex-col py-1">
+                {options.map((opt: any) => (
+                  <button
+                    key={opt.value}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      onChange(opt.value);
+                      setOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 text-[11px] hover:bg-amber-900/40 transition-colors ${value === opt.value ? 'bg-amber-900/20 text-amber-400' : 'text-amber-100/60'}`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
 export function FloatingNavbar() {
   const title = useBookStore((s) => s.title);
   const setTitle = useBookStore((s) => s.setTitle);
@@ -16,8 +68,9 @@ export function FloatingNavbar() {
 
   const { data: session, status } = useSession();
   const [downloading, setDownloading] = useState(false);
-  const [isHovered, setIsHovered] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [fontName, setFontName] = useState('var(--font-hand)');
+  const [fontSize, setFontSize] = useState('5');
   const router = useRouter();
 
   const handleDownload = async () => {
@@ -41,24 +94,13 @@ export function FloatingNavbar() {
 
   return (
     <>
-      {/* Top Edge Sensor */}
-      <div
-        className="fixed top-0 left-0 w-full h-10 z-[150]"
-        onMouseEnter={() => setIsHovered(true)}
-      />
-
-      <nav
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        className={`fixed top-0 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${isHovered ? 'translate-y-6 opacity-100' : '-translate-y-full opacity-0'
-          }`}
-      >
-        <div className="flex items-center gap-4 px-2 py-1.5 rounded-2xl bg-[#1e1e1e]/90 border border-white/5 shadow-2xl backdrop-blur-xl">
+      <nav className="fixed top-0 left-1/2 -translate-x-1/2 z-[100]">
+        <div className="flex items-center gap-4 px-6 py-2.5 rounded-b-2xl bg-black/60 border-b border-x border-amber-900/30 shadow-2xl backdrop-blur-xl">
           {/* Group: File Actions */}
-          <div className="flex items-center gap-1.5 px-2 border-r border-white/5 mr-1">
+          <div className="flex items-center gap-1.5 px-2 border-r border-amber-900/30 mr-1">
             <button
               onClick={() => { if (confirm("Start new story?")) newBook(); }}
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors group relative"
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-amber-900/20 text-amber-100/40 hover:text-amber-400 transition-colors group relative"
               title="New Book"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
@@ -88,44 +130,53 @@ export function FloatingNavbar() {
           </div>
 
           {/* Group: Text Styling */}
-          <div className="flex items-center gap-1 px-1 border-r border-white/5 mr-1">
+          <div className="flex items-center gap-1 px-1 border-r border-amber-900/30 mr-1">
             <button
               onMouseDown={(e) => { e.preventDefault(); exec('bold'); }}
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors text-sm font-bold"
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-amber-900/20 text-amber-100/40 hover:text-amber-400 transition-colors text-sm font-bold"
               title="Bold"
             >
               B
             </button>
             <button
               onMouseDown={(e) => { e.preventDefault(); exec('italic'); }}
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors text-sm italic"
+              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-amber-900/20 text-amber-100/40 hover:text-amber-400 transition-colors text-sm italic"
               title="Italic"
             >
               I
             </button>
 
-            <select
-              onChange={(e) => exec('fontName', e.target.value)}
-              className="bg-transparent text-[11px] text-white/40 outline-none hover:text-white transition-colors cursor-pointer px-2"
-            >
-              <option value="var(--font-hand)">Patrick Hand</option>
-              <option value="serif">Serif</option>
-              <option value="sans-serif">Sans Serif</option>
-            </select>
+            <CustomDropdown
+              value={fontName}
+              onChange={(v: string) => {
+                setFontName(v);
+                exec('fontName', v);
+              }}
+              options={[
+                { label: 'Patrick Hand', value: 'var(--font-hand)' },
+                { label: 'Serif', value: 'serif' },
+                { label: 'Sans Serif', value: 'sans-serif' }
+              ]}
+              className="h-8"
+            />
 
-            <select
-              defaultValue="5"
-              onChange={(e) => exec('fontSize', e.target.value)}
-              className="bg-transparent text-[11px] text-white/40 outline-none hover:text-white transition-colors cursor-pointer px-2"
-            >
-              <option value="1">Smallest</option>
-              <option value="2">Smaller</option>
-              <option value="3">Small</option>
-              <option value="4">Default</option>
-              <option value="5">Large</option>
-              <option value="6">Larger</option>
-              <option value="7">Largest</option>
-            </select>
+            <CustomDropdown
+              value={fontSize}
+              onChange={(v: string) => {
+                setFontSize(v);
+                exec('fontSize', v);
+              }}
+              options={[
+                { label: 'Smallest', value: '1' },
+                { label: 'Smaller', value: '2' },
+                { label: 'Small', value: '3' },
+                { label: 'Default', value: '4' },
+                { label: 'Large', value: '5' },
+                { label: 'Larger', value: '6' },
+                { label: 'Largest', value: '7' }
+              ]}
+              className="h-8"
+            />
           </div>
 
           {/* Center Group: Title Edit */}
@@ -133,17 +184,17 @@ export function FloatingNavbar() {
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="bg-transparent text-[12px] font-medium text-white/60 text-center outline-none focus:text-white transition-colors w-full"
+              className="bg-transparent text-[12px] font-bold text-amber-100/60 text-center outline-none focus:text-amber-400 transition-colors w-full tracking-wider"
               placeholder="Untitled"
             />
           </div>
 
           {/* Right Group: Export */}
-          <div className="flex items-center ml-1 pl-2 border-l border-white/5">
+          <div className="flex items-center ml-1 pl-2 border-l border-amber-900/30">
             <button
               onClick={handleDownload}
               disabled={downloading}
-              className={`h-8 px-4 flex items-center justify-center rounded-lg bg-[#5e5ce6]/20 text-[#7c7aff] text-[11px] font-bold uppercase tracking-wider transition-all hover:bg-[#5e5ce6]/30 disabled:opacity-20`}
+              className={`h-8 px-4 flex items-center justify-center rounded-lg bg-amber-900/10 border border-amber-900/30 text-amber-500/80 text-[11px] font-bold uppercase tracking-wider transition-all hover:bg-amber-900/30 hover:border-amber-700/50 hover:text-amber-400 disabled:opacity-20`}
             >
               {downloading ? "..." : "EXPORT"}
             </button>
