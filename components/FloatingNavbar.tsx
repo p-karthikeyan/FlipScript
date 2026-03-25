@@ -13,7 +13,7 @@ export function FloatingNavbar() {
   const title = useBookStore((s) => s.title);
   const setTitle = useBookStore((s) => s.setTitle);
   const newBook = useBookStore((s) => s.newBook);
-  
+
   const { data: session, status } = useSession();
   const [downloading, setDownloading] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -41,23 +41,22 @@ export function FloatingNavbar() {
   return (
     <>
       {/* Top Edge Sensor */}
-      <div 
-        className="fixed top-0 left-0 w-full h-10 z-[150]" 
+      <div
+        className="fixed top-0 left-0 w-full h-10 z-[150]"
         onMouseEnter={() => setIsHovered(true)}
       />
 
-      <nav 
+      <nav
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
-        className={`fixed top-0 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${
-          isHovered ? 'translate-y-6 opacity-100' : '-translate-y-full opacity-0'
-        }`}
+        className={`fixed top-0 left-1/2 -translate-x-1/2 z-[100] transition-all duration-500 ease-[cubic-bezier(0.22,1,0.36,1)] ${isHovered ? 'translate-y-6 opacity-100' : '-translate-y-full opacity-0'
+          }`}
       >
         <div className="flex items-center gap-4 px-2 py-1.5 rounded-2xl bg-[#1e1e1e]/90 border border-white/5 shadow-2xl backdrop-blur-xl">
           {/* Group: File Actions */}
           <div className="flex items-center gap-1.5 px-2 border-r border-white/5 mr-1">
             <button
-              onClick={() => { if(confirm("Start new story?")) newBook(); }}
+              onClick={() => { if (confirm("Start new story?")) newBook(); }}
               className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-colors group relative"
               title="New Book"
             >
@@ -89,8 +88,8 @@ export function FloatingNavbar() {
             >
               I
             </button>
-            
-            <select 
+
+            <select
               onChange={(e) => exec('fontName', e.target.value)}
               className="bg-transparent text-[11px] text-white/40 outline-none hover:text-white transition-colors cursor-pointer px-2"
             >
@@ -99,7 +98,7 @@ export function FloatingNavbar() {
               <option value="sans-serif">Sans Serif</option>
             </select>
 
-            <select 
+            <select
               defaultValue="5"
               onChange={(e) => exec('fontSize', e.target.value)}
               className="bg-transparent text-[11px] text-white/40 outline-none hover:text-white transition-colors cursor-pointer px-2"
@@ -137,11 +136,11 @@ export function FloatingNavbar() {
         </div>
       </nav>
 
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
+      <AuthModal
+        isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         title="Permission to Export"
-        description="To export your manuscript, please verify your identity with Google. This ensures your work is stored in the archives."
+        description="To export your book, please verify your identity with Google. This ensures your work is stored in the archives."
       />
     </>
   );

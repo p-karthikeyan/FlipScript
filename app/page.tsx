@@ -29,15 +29,15 @@ export default function LandingPage() {
 
   return (
     <div className="relative min-h-screen w-full bg-[#0a0a0a] text-[#d4d4d4] overflow-hidden selection:bg-amber-900/30 font-sans">
-      
+
       {/* Background Ambience: Ink on Parchment style */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-amber-900/10 blur-[150px] rounded-full" />
         <div className="absolute bottom-[-5%] right-[-5%] w-[40%] h-[40%] bg-amber-900/5 blur-[120px] rounded-full" />
-        
+
         {/* Subtle Paper Texture */}
         <div className="absolute inset-0 opacity-[0.03] mix-blend-overlay bg-[url('https://www.transparenttextures.com/patterns/old-mathematics.png')] pointer-events-none" />
-        
+
         {/* Floating Ink Droplets (Decorative) */}
         {[...Array(6)].map((_, i) => (
           <motion.div
@@ -66,15 +66,15 @@ export default function LandingPage() {
             FlipScript
           </span>
         </div>
-        
+
         <div className="flex items-center gap-8 font-hand">
-          <button 
+          <button
             onClick={() => setIsAuthModalOpen(true)}
             className="text-lg text-amber-100/40 hover:text-amber-100 transition-colors"
           >
             Sign-in
           </button>
-          <button 
+          <button
             onClick={() => setIsAuthModalOpen(true)}
             className="px-6 py-2 border border-amber-900/40 text-amber-200/90 text-lg rounded-full hover:bg-amber-900/10 transition-all hover:border-amber-700/60"
           >
@@ -86,28 +86,28 @@ export default function LandingPage() {
       {/* Hero Section */}
       <main className="relative z-10 flex flex-col items-center justify-center px-4 pt-24 pb-32 text-center max-w-6xl mx-auto">
         <motion.div
-           initial={{ opacity: 0, y: 30 }}
-           animate={{ opacity: 1, y: 0 }}
-           transition={{ duration: 1, ease: "easeOut" }}
-           className="space-y-10"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 1, ease: "easeOut" }}
+          className="space-y-10"
         >
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-900/5 border border-amber-900/20 text-[11px] font-bold uppercase tracking-[0.3em] text-amber-500/80">
             <PenTool className="w-3 h-3" />
             Analog Souls, Digital Paper
           </div>
-          
+
           <h1 className="text-7xl md:text-9xl font-hand tracking-tight leading-[0.85] text-amber-50/90">
-            Your Manuscript <br />
-            <span className="text-amber-500/40 italic">Breathes Here.</span>
+            Your Book <br />
+            <span className="text-amber-500/40">Breathes Here.</span>
           </h1>
-          
+
           <p className="max-w-2xl mx-auto text-xl md:text-2xl font-hand text-amber-100/30 leading-relaxed italic">
-            A sanctuary for stories. No distractions, just the sound of virtual pages 
+            A sanctuary for stories. No distractions, just the sound of virtual pages
             turning and the permanence of shared memory.
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-12">
-            <button 
+            <button
               onClick={() => setIsAuthModalOpen(true)}
               className="group relative px-10 py-5 bg-amber-900/10 border border-amber-800/40 rounded-2xl font-hand text-2xl text-amber-200/90 hover:bg-amber-800/20 transition-all hover:-translate-y-1 shadow-[0_0_30px_rgba(150,75,0,0.05)]"
             >
@@ -115,7 +115,7 @@ export default function LandingPage() {
                 Enter the Vault <ArrowRight className="w-6 h-6 group-hover:translate-x-1 transition-transform opacity-50" />
               </span>
             </button>
-            <Link 
+            <Link
               href="/editor/guest"
               className="px-10 py-5 bg-transparent border border-white/5 rounded-2xl font-hand text-2xl text-white/20 hover:text-white/40 hover:border-white/10 transition-all"
             >
@@ -126,14 +126,14 @@ export default function LandingPage() {
 
         {/* Artistic Visual Element */}
         <div className="relative mt-40 w-full max-w-4xl opacity-40 group">
-           <div className="absolute inset-0 bg-amber-900/5 blur-[100px] rounded-full group-hover:bg-amber-800/10 transition-colors" />
-           <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-amber-900/40 to-transparent" />
-           <div className="py-20 flex items-center justify-center gap-20">
-              <Bookmark className="w-8 h-8 text-amber-900/40" />
-              <Feather className="w-12 h-12 text-amber-800/40 rotate-12" />
-              <BookOpen className="w-8 h-8 text-amber-900/40 -scale-x-100" />
-           </div>
-           <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-amber-900/40 to-transparent" />
+          <div className="absolute inset-0 bg-amber-900/5 blur-[100px] rounded-full group-hover:bg-amber-800/10 transition-colors" />
+          <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-amber-900/40 to-transparent" />
+          <div className="py-20 flex items-center justify-center gap-20">
+            <Bookmark className="w-8 h-8 text-amber-900/40" />
+            <Feather className="w-12 h-12 text-amber-800/40 rotate-12" />
+            <BookOpen className="w-8 h-8 text-amber-900/40 -scale-x-100" />
+          </div>
+          <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-amber-900/40 to-transparent" />
         </div>
 
         {/* Philosophy Cards */}
@@ -145,7 +145,7 @@ export default function LandingPage() {
             },
             {
               title: "Eternal Storage",
-              desc: "Ink that never fades. Your manuscripts are secured in the MongoDB deep vault.",
+              desc: "Ink that never fades. Your books are secured in the MongoDB deep vault.",
             },
             {
               title: "Silent Focus",
@@ -172,12 +172,12 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto flex flex-col items-center gap-8">
           <div className="font-hand text-4xl text-amber-100/20">FlipScript</div>
           <div className="flex gap-12 text-[10px] tracking-[0.5em] text-white/10 uppercase font-bold">
-             <span>Manuscript Repository</span>
-             <span>Privacy First</span>
-             <span>No Tracking</span>
+            <span>Book Repository</span>
+            <span>Privacy First</span>
+            <span>No Tracking</span>
           </div>
           <p className="text-[10px] tracking-[0.2em] text-white/5 uppercase font-medium mt-4">
-             &copy; MCMXXVI Anti-Gravity Labs. Dedicated to the craft of writing.
+            &copy; FlipScripts. Dedicated to the craft of writing.
           </p>
         </div>
       </footer>
@@ -189,11 +189,11 @@ export default function LandingPage() {
         }
       `}</style>
 
-      <AuthModal 
-        isOpen={isAuthModalOpen} 
+      <AuthModal
+        isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         title="Welcome to FlipScript"
-        description="Verify your identity to secure your manuscripts in the vault."
+        description="Verify your identity to secure your books in the vault."
       />
     </div>
   );

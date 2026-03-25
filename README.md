@@ -1,6 +1,6 @@
-# FlipScript: The Digital Manuscript Engine
+# FlipScript: The Digital Book Engine
 
-**FlipScript** is an immersive, distraction-free writing environment designed to evoke the tactile feeling of a physical journal. Built with a "handwritten" aesthetic and realistic page-turn physics, it serves as a secure sanctuary for your thoughts, stories, and manuscripts.
+**FlipScript** is an immersive, distraction-free writing environment designed to evoke the tactile feeling of a physical journal. Built with a "handwritten" aesthetic and realistic page-turn physics, it serves as a secure sanctuary for your thoughts, stories, and books.
 
 ---
 
@@ -8,10 +8,10 @@
 
 - **📖 Immersive Experience**: Realistic 3D-like page flip animations and physics that mimic physical journals.
 - **🖊️ Handwritten Aesthetic**: Elegant "ink-on-parchment" design using refined typography and muted sepia tones.
-- **🔐 Secure Archive (Google SSO)**: Seamless authentication via Google. No passwords required—just sign in and your manuscripts are instantly synced to your vault.
+- **🔐 Secure Archive (Google SSO)**: Seamless authentication via Google. No passwords required—just sign in and your books are instantly synced to your vault.
 - **💾 Permanent Vault (MongoDB)**: Automatic, debounced cloud storage. Every letter you type is preserved in your private archive.
 - **🚶 Guest Mode**: Start writing immediately without an account. Sign in only when you're ready to export or commit to the archive.
-- **🖼️ Export to PDF**: Convert your digital manuscript into a professional PDF ready for sharing.
+- **🖼️ Export to PDF**: Convert your digital book into a professional PDF ready for sharing.
 
 ---
 

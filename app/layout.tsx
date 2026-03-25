@@ -20,7 +20,7 @@ const patrickHand = Patrick_Hand({
 });
 
 export const metadata: Metadata = {
-  title: "FlipScript | Digital Manuscript Engine",
+  title: "FlipScript | Digital Book Engine",
   description: "Immersive book creation with realistic page flips and secure Google SSO storage.",
 };
 
