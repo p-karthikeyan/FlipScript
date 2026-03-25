@@ -41,15 +41,15 @@ export function BookViewer() {
     <div className="relative flex w-full flex-col items-center justify-center p-4">
       {/* The Book Container: Adaptive sizing for immersive feel */}
       <div className="relative h-[clamp(550px,80vh,900px)] w-[clamp(360px,95vw,1100px)] flex shadow-[0_50px_100px_-50px_rgba(0,0,0,1)] rounded-sm overflow-visible bg-[#241a0d]">
-        
+
         {/* Left Side Page */}
         <div className="absolute left-0 top-0 h-full w-1/2 flex items-center justify-center">
-           {leftPage && <Page pageId={leftPage.id} side="left" editable={!flipBusy} />}
+          {leftPage && <Page pageId={leftPage.id} side="left" editable={!flipBusy} />}
         </div>
-        
+
         {/* Right Side Page */}
         <div className="absolute right-0 top-0 h-full w-1/2 flex items-center justify-center">
-           {rightPage && <Page pageId={rightPage.id} side="right" editable={!flipBusy} />}
+          {rightPage && <Page pageId={rightPage.id} side="right" editable={!flipBusy} />}
         </div>
 
         {/* Real-feel Hinge/Spine */}
@@ -87,9 +87,9 @@ export function BookViewer() {
         >
           PREV
         </button>
-        
+
         <div className="text-[10px] font-mono tracking-[0.3em] uppercase text-white/10">
-           {spreadNumber} / {totalSpreads}
+          {spreadNumber} / {totalSpreads}
         </div>
 
         <button
@@ -99,9 +99,6 @@ export function BookViewer() {
         >
           NEXT
         </button>
-      </div>
-      <div className="mt-4 text-[9px] uppercase tracking-[0.5em] text-white/10 font-mono">
-         Page auto-pagination enabled
       </div>
     </div>
   );

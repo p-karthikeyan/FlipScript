@@ -110,9 +110,6 @@ export default function EditorPage() {
             {saving ? "Syncing to Archives..." : "Manifest Stored"}
           </div>
         )}
-        <div className="text-[10px] tracking-[0.8em] text-white/5 uppercase">
-          Anti-Gravity StoryWriter v2
-        </div>
         <div className="text-[8px] tracking-[0.4em] text-white/10 uppercase font-bold">
           {id === "guest" ? "GUEST MODE" : "SECURE SESSION"}
         </div>
