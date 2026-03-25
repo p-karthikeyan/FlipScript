@@ -2,8 +2,8 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { useEffect, useState } from "react";
-import { Plus, Book as BookIcon, LogOut, Trash2, ArrowRight, Feather, Library } from "lucide-react";
-import { motion } from "framer-motion";
+import { Plus, Book as BookIcon, LogOut, Trash2, ArrowRight, Feather, Library, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { CustomCursor } from "@/components/CustomCursor";
@@ -12,6 +12,7 @@ export default function Dashboard() {
   const { data: session, status } = useSession();
   const [books, setBooks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bookToDelete, setBookToDelete] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -47,7 +48,13 @@ export default function Dashboard() {
   const deleteBook = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (!confirm("Are you sure? This delete is permanent.")) return;
+    setBookToDelete(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!bookToDelete) return;
+    const id = bookToDelete;
+    setBookToDelete(null);
     await fetch(`/api/books/${id}`, { method: "DELETE" });
     setBooks(prev => prev.filter(b => b._id !== id));
   };
@@ -178,6 +185,60 @@ export default function Dashboard() {
           font-family: var(--font-hand), cursive;
         }
       `}</style>
+
+      <AnimatePresence>
+        {bookToDelete && (
+          <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setBookToDelete(null)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-md bg-[#0f0f0f] border border-red-900/30 rounded-[40px] p-10 overflow-hidden font-sans"
+            >
+              {/* Background Ambience */}
+              <div className="absolute top-0 right-0 w-32 h-32 bg-red-900/10 blur-[60px] pointer-events-none rounded-full" />
+              <button
+                onClick={() => setBookToDelete(null)}
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-white/5 transition-colors text-white/20 hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-red-900/10 border border-red-900/20 flex items-center justify-center mb-6">
+                  <Trash2 className="w-8 h-8 text-red-500/60" />
+                </div>
+                <h2 className="text-3xl font-bold font-hand text-red-50/90 mb-2">
+                  Incinerate Book?
+                </h2>
+                <p className="text-lg font-hand text-red-100/40 mb-8 leading-relaxed italic">
+                  This action is permanent and cannot be undone. Your manuscript will be lost to the void.
+                </p>
+                <div className="flex w-full gap-4">
+                  <button
+                    onClick={() => setBookToDelete(null)}
+                    className="flex-1 py-4 bg-white/5 hover:bg-white/10 text-white/60 rounded-2xl font-bold transition-all font-sans"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={confirmDelete}
+                    className="flex-1 py-4 bg-red-900/80 hover:bg-red-600 text-white rounded-2xl font-bold flex items-center justify-center gap-2 transition-all shadow-[0_0_20px_rgba(220,38,38,0.2)] font-sans"
+                  >
+                    <Trash2 className="w-4 h-4" /> Delete
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
