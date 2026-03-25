@@ -38,8 +38,12 @@ export default function EditorPage() {
       const res = await fetch(`/api/books/${id}`);
       if (res.ok) {
         const data = await res.json();
+        const sanitizedPages = data.pages?.map((p: any) => ({
+          ...p,
+          id: p.id || p._id || crypto.randomUUID()
+        })) || [];
         // Update Title and Pages in Store
-        setBook({ title: data.title, pages: data.pages });
+        setBook({ title: data.title, pages: sanitizedPages });
       }
     } finally {
       setLoading(false);

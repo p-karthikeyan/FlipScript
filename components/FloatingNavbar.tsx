@@ -5,7 +5,7 @@ import { downloadBookAsPdf } from '@/lib/pdfExport';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { LayoutGrid, LogOut, Library } from 'lucide-react';
 import { AuthModal } from './AuthModal';
 
@@ -18,6 +18,7 @@ export function FloatingNavbar() {
   const [downloading, setDownloading] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const router = useRouter();
 
   const handleDownload = async () => {
     if (status !== 'authenticated') {
@@ -62,14 +63,28 @@ export function FloatingNavbar() {
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
             </button>
-            <Link
-              href="/dashboard"
+            <button
+              onClick={async () => {
+                const book = useBookStore.getState();
+                const path = window.location.pathname;
+                if (path.startsWith('/editor/') && !path.includes('/guest')) {
+                  const id = path.split('/').pop();
+                  if (id) {
+                    await fetch(`/api/books/${id}`, {
+                      method: "PUT",
+                      body: JSON.stringify({ title: book.title, pages: book.pages }),
+                      headers: { "Content-Type": "application/json" },
+                    }).catch(console.error);
+                  }
+                }
+                router.push('/dashboard');
+              }}
               className="px-3 h-8 flex items-center justify-center gap-2 rounded-lg bg-amber-900/10 border border-amber-900/20 text-amber-500/60 hover:text-amber-500 hover:bg-amber-900/20 hover:border-amber-700/40 transition-all font-bold text-[10px] uppercase tracking-widest"
               title="Return to Library"
             >
               <Library className="w-3.5 h-3.5" />
               <span>Library</span>
-            </Link>
+            </button>
           </div>
 
           {/* Group: Text Styling */}

@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   const book = await Book.create({
     userId: session.user.id,
     title: title || "New Story",
-    pages: pages || [{ content: "Start writing your story..." }],
+    pages: pages || [{ id: crypto.randomUUID(), content: "Start writing your story..." }],
   });
 
   return NextResponse.json(book);

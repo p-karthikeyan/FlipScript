@@ -1,7 +1,28 @@
 'use client';
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
+
+const customStorage = {
+  getItem: (name: string) => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem(name);
+  },
+  setItem: (name: string, value: string) => {
+    if (typeof window === 'undefined') return;
+    const path = window.location.pathname;
+    // Only persist to localStorage if writing as a guest.
+    // If authenticated, we fetch directly from DB. Persisting to 
+    // localStorage will leak the book's title to other authenticated books.
+    if (path.includes('/editor/guest') || path === '/') {
+      localStorage.setItem(name, value);
+    }
+  },
+  removeItem: (name: string) => {
+    if (typeof window === 'undefined') return;
+    localStorage.removeItem(name);
+  },
+};
 
 const uid = () => crypto.randomUUID();
 
@@ -170,6 +191,7 @@ export const useBookStore = create<BookStore>()(
     {
       name: 'storywriter_v3', // New version for DB sync
       version: 3,
+      storage: createJSONStorage(() => customStorage),
     },
   ),
 );
