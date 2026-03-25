@@ -87,14 +87,14 @@ export function CustomCursor() {
         style={{
           x: cursorX,
           y: cursorY,
-          translateX: "-15%", // Adjust so the feather tip is near the actual pointer position
+          translateX: "-85%", // Adjust so the feather tip (top-right) is near the actual pointer position
           translateY: "-15%"
         }}
       >
         {/* Glow */}
         <div className="absolute w-20 h-20 bg-amber-500/20 blur-xl rounded-full -z-10" />
         {/* Feather */}
-        <Feather className="w-8 h-8 text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.8)] -scale-x-100" />
+        <Feather className="w-8 h-8 text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
       </motion.div>
     </>
   );
