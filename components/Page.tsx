@@ -182,7 +182,7 @@ export function Page({
       {/* Page number */}
       <div 
         suppressHydrationWarning
-        className={`absolute bottom-6 ${side === 'left' ? 'left-6' : 'right-6'} text-[11px] font-mono text-black/20 uppercase tracking-widest`}
+        className={`absolute bottom-6 ${side === 'left' ? 'left-6' : 'right-6'} text-[12px] font-mono font-bold text-black/40 uppercase tracking-widest`}
       >
          {pageId.slice(0, 4)}
       </div>

@@ -2,7 +2,7 @@
 
 import { useBookStore } from '@/store/useBookStore';
 import { downloadBookAsPdf } from '@/lib/pdfExport';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -71,7 +71,15 @@ export function FloatingNavbar() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [fontName, setFontName] = useState('var(--font-hand)');
   const [fontSize, setFontSize] = useState('5');
+  const [refresh, setRefresh] = useState(0);
   const router = useRouter();
+
+  // Re-render when selection changes to update active button states
+  useEffect(() => {
+    const handleSelectionChange = () => setRefresh(r => r + 1);
+    document.addEventListener('selectionchange', handleSelectionChange);
+    return () => document.removeEventListener('selectionchange', handleSelectionChange);
+  }, []);
 
   const handleDownload = async () => {
     if (status !== 'authenticated') {
@@ -90,6 +98,7 @@ export function FloatingNavbar() {
 
   const exec = (cmd: string, val?: string) => {
     document.execCommand(cmd, false, val);
+    setRefresh(r => r + 1);
   };
 
   return (
@@ -133,14 +142,22 @@ export function FloatingNavbar() {
           <div className="flex items-center gap-1 px-1 border-r border-amber-900/30 mr-1">
             <button
               onMouseDown={(e) => { e.preventDefault(); exec('bold'); }}
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-amber-900/20 text-amber-100/40 hover:text-amber-400 transition-colors text-sm font-bold"
+              className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors text-sm font-bold ${
+                typeof document !== 'undefined' && document.queryCommandState('bold') 
+                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                  : 'hover:bg-amber-900/20 text-amber-100/40 hover:text-amber-400'
+              }`}
               title="Bold"
             >
               B
             </button>
             <button
               onMouseDown={(e) => { e.preventDefault(); exec('italic'); }}
-              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-amber-900/20 text-amber-100/40 hover:text-amber-400 transition-colors text-sm italic"
+              className={`w-8 h-8 flex items-center justify-center rounded-lg transition-colors text-sm italic ${
+                typeof document !== 'undefined' && document.queryCommandState('italic') 
+                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                  : 'hover:bg-amber-900/20 text-amber-100/40 hover:text-amber-400'
+              }`}
               title="Italic"
             >
               I

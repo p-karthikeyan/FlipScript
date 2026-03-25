@@ -88,7 +88,7 @@ export function BookViewer() {
           PREV
         </button>
 
-        <div className="text-[10px] font-mono tracking-[0.3em] uppercase text-white/10">
+        <div className="text-[10px] font-mono tracking-[0.3em] uppercase text-white/40 font-bold">
           {spreadNumber} / {totalSpreads}
         </div>
 
