@@ -71,6 +71,13 @@ const createDefaultPages = (): Page[] => [
   { id: uid(), content: '' },
 ];
 
+const padPagesToEven = (pages: Page[]): Page[] => {
+  if (pages.length % 2 !== 0) {
+    return [...pages, { id: uid(), content: '' }];
+  }
+  return pages;
+};
+
 export const useBookStore = create<BookStore>()(
   persist(
     (set, get) => ({
@@ -115,7 +122,8 @@ export const useBookStore = create<BookStore>()(
           nextPages[fromIdx + 1].content = overflow + nextPages[fromIdx + 1].content;
         }
 
-        set({ pages: nextPages, focusedPageId: nextPages[fromIdx + 1].id, selectionOffset: 0 });
+        const paddedPages = padPagesToEven(nextPages);
+        set({ pages: paddedPages, focusedPageId: nextPages[fromIdx + 1].id, selectionOffset: 0 });
 
         // If the right-hand page (odd index) overflowed, flip the spread
         if (fromIdx % 2 !== 0 && fromIdx === currentPageIndex + 1) {
@@ -143,15 +151,16 @@ export const useBookStore = create<BookStore>()(
           newPages[nextIdx].content = '';
         }
 
+        const paddedPages = padPagesToEven(newPages);
         set({ 
-          pages: newPages, 
+          pages: paddedPages, 
           focusedPageId: targetPageId, 
           selectionOffset: targetOldLength 
         });
 
         // Re-check navigation boundaries
-        if (currentPageIndex >= newPages.length) {
-          set({ currentPageIndex: Math.max(0, newPages.length - (newPages.length % 2 === 0 ? 2 : 1)) });
+        if (currentPageIndex >= paddedPages.length) {
+          set({ currentPageIndex: Math.max(0, paddedPages.length - 2) });
         }
       },
 
@@ -175,16 +184,17 @@ export const useBookStore = create<BookStore>()(
       },
 
       setBook: (book) => {
+        const initialPages = book.pages.length > 0 ? book.pages : createDefaultPages();
         set({
           title: book.title,
-          pages: book.pages.length > 0 ? book.pages : createDefaultPages(),
+          pages: padPagesToEven(initialPages),
           currentPageIndex: 0,
           focusedPageId: null,
           selectionOffset: 0,
         });
       },
 
-      setPages: (pages) => set({ pages }),
+      setPages: (pages) => set({ pages: padPagesToEven(pages) }),
 
       clearFocus: () => set({ focusedPageId: null, selectionOffset: 0 }),
     }),

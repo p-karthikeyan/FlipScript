@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useBookStore } from '@/store/useBookStore';
 import { useParams, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
+import { ArrowLeft } from 'lucide-react';
 
 export default function EditorPage() {
   const { status } = useSession();
@@ -98,6 +99,38 @@ export default function EditorPage() {
       {/* Centered Floating Navbar */}
       <FloatingNavbar />
 
+      {/* Back Button (Top Left) */}
+      <button
+        onClick={async () => {
+          if (id && id !== "guest") {
+            const book = useBookStore.getState();
+            await fetch(`/api/books/${id}`, {
+              method: "PUT",
+              body: JSON.stringify({ title: book.title, pages: book.pages }),
+              headers: { "Content-Type": "application/json" },
+            }).catch(console.error);
+          }
+          router.push('/dashboard');
+        }}
+        className="absolute top-4 left-6 flex items-center gap-2 text-amber-100/40 hover:text-amber-400 transition-colors z-50 group font-bold tracking-widest text-[10px] uppercase"
+      >
+        <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+        Library
+      </button>
+
+      {/* Top Right Save Status */}
+      <div className="absolute top-4 right-6 flex flex-col items-end gap-1 pointer-events-none z-50">
+        {/* Save Status Indicator */}
+        {id !== "guest" && (
+          <div className={`text-[9px] tracking-[0.4em] uppercase font-bold transition-all duration-700 ${saving ? 'text-amber-500 opacity-100 animate-pulse' : 'text-amber-100/20'}`}>
+            {saving ? "Syncing..." : "Manifest Stored"}
+          </div>
+        )}
+        <div className="text-[8px] tracking-[0.4em] text-amber-100/10 uppercase font-bold">
+          {id === "guest" ? "GUEST MODE" : "SECURE SESSION"}
+        </div>
+      </div>
+
       {/* Main Experience: Center-focused Book */}
       <main className="relative flex-1 flex flex-col items-center px-4 pt-20 pb-16 overflow-auto scrollbar-hide">
         <div className="my-auto w-full flex items-center justify-center">
@@ -105,18 +138,6 @@ export default function EditorPage() {
         </div>
       </main>
 
-      {/* Subtle Bottom Branding */}
-      <footer className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-none flex flex-col items-center gap-2">
-        {/* Save Status Indicator */}
-        {id !== "guest" && (
-          <div className={`text-[9px] tracking-[0.4em] uppercase font-bold transition-all duration-700 ${saving ? 'text-amber-500 opacity-100 animate-pulse' : 'text-white/10 opacity-50'}`}>
-            {saving ? "Syncing to Archives..." : "Manifest Stored"}
-          </div>
-        )}
-        <div className="text-[8px] tracking-[0.4em] text-white/10 uppercase font-bold">
-          {id === "guest" ? "GUEST MODE" : "SECURE SESSION"}
-        </div>
-      </footer>
     </div>
   );
 }
