@@ -77,23 +77,29 @@ export default function Dashboard() {
           </div>
           <div>
             <h1 className="text-5xl font-bold tracking-tight text-amber-50/90 leading-none">The Archive</h1>
-            <p className="text-amber-100/20 text-xl italic mt-1">Preserve your books for eternity.</p>
+            <p className="text-amber-100/20 text-xl mt-1">Preserve your books for eternity.</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-8">
-          {session?.user?.image && (
-            <div className="relative group">
-              <img src={session.user.image} className="w-12 h-12 rounded-full border border-amber-900/20 transition-all group-hover:border-amber-700/60" alt="Profile" />
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-amber-600 rounded-full border-2 border-[#0a0a0a]" />
-            </div>
-          )}
+        <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3">
+            {session?.user?.image && (
+              <div className="relative group flex-shrink-0">
+                <img src={session.user.image} className="w-10 h-10 rounded-full border border-amber-900/20 transition-all group-hover:border-amber-700/60" alt="Profile" />
+                <div className="absolute bottom-0 right-0 w-3 h-3 bg-amber-600 rounded-full border-2 border-[#0a0a0a]" />
+              </div>
+            )}
+            {session?.user?.name && (
+              <span className="text-lg text-amber-50/80 font-bold tracking-wide pr-2">{session.user.name}</span>
+            )}
+          </div>
+
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-full border border-white/5 hover:border-red-900/40 hover:bg-red-900/10 text-white/20 hover:text-red-400 transition-all"
+            className="flex items-center justify-center w-12 h-12 rounded-full border border-amber-900/30 hover:border-amber-600/60 hover:bg-amber-900/20 text-amber-600/60 hover:text-amber-400 transition-all shadow-sm"
+            title="Sign out"
           >
-            <LogOut className="w-4 h-4" />
-            <span className="text-sm font-bold uppercase tracking-[0.2em]">Sign out</span>
+            <LogOut className="w-5 h-5 ml-1" />
           </button>
         </div>
       </header>
