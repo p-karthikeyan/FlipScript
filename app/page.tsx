@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthModal } from "@/components/AuthModal";
+import { CustomCursor } from "@/components/CustomCursor";
 
 export default function LandingPage() {
   const { data: session, status } = useSession();
@@ -29,6 +30,7 @@ export default function LandingPage() {
 
   return (
     <div className="relative min-h-screen w-full bg-[#0a0a0a] text-[#d4d4d4] overflow-hidden selection:bg-amber-900/30 font-sans">
+      <CustomCursor />
 
       {/* Background Ambience: Ink on Parchment style */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">

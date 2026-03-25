@@ -6,6 +6,7 @@ import { Plus, Book as BookIcon, LogOut, Trash2, ArrowRight, Feather, Library } 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { CustomCursor } from "@/components/CustomCursor";
 
 export default function Dashboard() {
   const { data: session, status } = useSession();
@@ -61,6 +62,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen w-full bg-[#0a0a0a] text-[#d4d4d4] p-8 md:p-16 relative overflow-hidden font-hand">
+      <CustomCursor />
 
       {/* Background Ambience: Ink on Parchment style (matching landing) */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
