@@ -27,14 +27,13 @@ export function Page({
 
   // Synchronize content to DOM.
   useEffect(() => {
-    if (!editable) return;
-    // Only update if the content in the store is different from what we last set
-    // AND it's strictly different from what's currently in the DOM.
-    if (editableRef.current && content !== lastSentContent.current) {
-      if (editableRef.current.innerHTML !== content) {
-        editableRef.current.innerHTML = content;
-        lastSentContent.current = content;
-      }
+    if (!editable || !editableRef.current) return;
+    
+    // If the DOM is different from the store, update it.
+    // We use innerHTML directly because we are building a "handwritten" feel with HTML allowed (potentially).
+    if (editableRef.current.innerHTML !== content) {
+      editableRef.current.innerHTML = content;
+      lastSentContent.current = content;
     }
   }, [content, editable]);
 

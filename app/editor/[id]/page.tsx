@@ -27,12 +27,16 @@ export default function EditorPage() {
   }, [status, router]);
 
   useEffect(() => {
+    if (status === "loading") return;
+
     if (id && id !== "guest") {
-      fetchBook();
+      if (status === "authenticated") {
+        fetchBook();
+      }
     } else {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, status]);
 
   const fetchBook = async () => {
     try {
@@ -45,9 +49,10 @@ export default function EditorPage() {
         })) || [];
         // Update Title and Pages in Store
         setBook({ title: data.title, pages: sanitizedPages });
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
+    } catch (e) {
+      console.error("Failed to load book:", e);
     }
   };
 
