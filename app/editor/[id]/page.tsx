@@ -21,10 +21,10 @@ export default function EditorPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (status === "unauthenticated") {
+    if (status === "unauthenticated" && id !== "guest") {
       router.push("/");
     }
-  }, [status, router]);
+  }, [status, router, id]);
 
   useEffect(() => {
     if (status === "loading") return;
