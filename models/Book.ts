@@ -14,6 +14,7 @@ const BookSchema = new Schema(
     pages: [PageSchema],
     currentPage: { type: Number, default: 0 },
     isPublic: { type: Boolean, default: false },
+    shareId: { type: String, unique: true, sparse: true, index: true },
   },
   { timestamps: true }
 );

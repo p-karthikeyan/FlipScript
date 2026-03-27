@@ -9,30 +9,29 @@ import { useSession } from 'next-auth/react';
 import { ArrowLeft } from 'lucide-react';
 
 export default function EditorPage() {
-  const { status } = useSession();
+  const { data: session, status } = useSession();
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
 
   const setBook = useBookStore(s => s.setBook);
+  const setIsOwner = useBookStore(s => s.setIsOwner);
   const title = useBookStore(s => s.title);
   const pages = useBookStore(s => s.pages);
+  const isOwner = useBookStore(s => s.isOwner);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (status === "unauthenticated" && id !== "guest") {
-      router.push("/");
-    }
+    // We handle unauthorized access directly in fetchBook 
+    // to allow public shared books to be viewed.
   }, [status, router, id]);
 
   useEffect(() => {
     if (status === "loading") return;
 
     if (id && id !== "guest") {
-      if (status === "authenticated") {
-        fetchBook();
-      }
+      fetchBook();
     } else {
       setLoading(false);
     }
@@ -47,12 +46,32 @@ export default function EditorPage() {
           ...p,
           id: p.id || p._id || crypto.randomUUID()
         })) || [];
-        // Update Title and Pages in Store
-        setBook({ title: data.title, pages: sanitizedPages });
+        // Update Store
+        const owner = id === "guest" || (session?.user && data.userId === (session.user as any).id);
+        
+        // If not owner and not guest, redirect to public viewer
+        if (!owner && id !== "guest" && status !== "loading") {
+           router.push(`/public/${id}`);
+           return;
+        }
+
+        setIsOwner(!!owner);
+        setBook({ 
+          title: data.title, 
+          pages: sanitizedPages,
+          shareId: data.shareId
+        });
+        setLoading(false);
+      } else if (res.status === 401) {
+        // Unauthenticated access to private books should go to public first 
+        // (if it remains 401 there, public page handles it)
+        router.push(`/public/${id}`);
+      } else {
         setLoading(false);
       }
     } catch (e) {
       console.error("Failed to load book:", e);
+      setLoading(false);
     }
   };
 
@@ -126,20 +145,20 @@ export default function EditorPage() {
       {/* Top Right Save Status */}
       <div className="absolute top-4 right-6 flex flex-col items-end gap-1 pointer-events-none z-50">
         {/* Save Status Indicator */}
-        {id !== "guest" && (
+        {isOwner && id !== "guest" && (
           <div className={`text-[9px] tracking-[0.4em] uppercase font-bold transition-all duration-700 ${saving ? 'text-amber-500 opacity-100 animate-pulse' : 'text-amber-100/20'}`}>
             {saving ? "Syncing..." : "Manifest Stored"}
           </div>
         )}
         <div className="text-[8px] tracking-[0.4em] text-amber-100/10 uppercase font-bold">
-          {id === "guest" ? "GUEST MODE" : "SECURE SESSION"}
+          {id === "guest" ? "GUEST MODE" : isOwner ? "SECURE SESSION" : "PUBLIC VIEW"}
         </div>
       </div>
 
       {/* Main Experience: Center-focused Book */}
       <main className="relative flex-1 flex flex-col items-center px-4 pt-20 pb-16 overflow-auto scrollbar-hide">
         <div className="my-auto w-full flex items-center justify-center">
-          <BookViewer />
+          <BookViewer editable={isOwner} />
         </div>
       </main>
 

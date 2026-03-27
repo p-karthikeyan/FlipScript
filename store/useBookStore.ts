@@ -44,6 +44,9 @@ export type Book = {
    * Offset for caret placement when focusing.
    */
   selectionOffset: number;
+  isPublic: boolean;
+  isOwner: boolean;
+  shareId?: string | null;
 };
 
 type BookActions = {
@@ -60,8 +63,10 @@ type BookActions = {
   goPrev: () => void;
   clearFocus: () => void;
   setPageIndex: (index: number) => void;
-  setBook: (book: { title: string, pages: Page[] }) => void;
+  setBook: (book: { title: string, pages: Page[], isPublic?: boolean, shareId?: string }) => void;
   setPages: (pages: Page[]) => void;
+  setIsPublic: (isPublic: boolean) => void;
+  setIsOwner: (isOwner: boolean) => void;
 };
 
 export type BookStore = Book & BookActions;
@@ -86,6 +91,9 @@ export const useBookStore = create<BookStore>()(
       currentPageIndex: 0,
       focusedPageId: null,
       selectionOffset: 0,
+      isPublic: false,
+      isOwner: true, // Default to true for guest mode
+      shareId: null,
 
       newBook: () => {
         set({
@@ -94,6 +102,9 @@ export const useBookStore = create<BookStore>()(
           currentPageIndex: 0,
           focusedPageId: null,
           selectionOffset: 0,
+          isPublic: false,
+          isOwner: true,
+          shareId: null,
         });
       },
 
@@ -188,11 +199,16 @@ export const useBookStore = create<BookStore>()(
         set({
           title: book.title,
           pages: padPagesToEven(initialPages),
+          isPublic: book.isPublic ?? false,
+          shareId: book.shareId ?? null,
           currentPageIndex: 0,
           focusedPageId: null,
           selectionOffset: 0,
         });
       },
+
+      setIsPublic: (isPublic) => set({ isPublic }),
+      setIsOwner: (isOwner) => set({ isOwner }),
 
       setPages: (pages) => set({ pages: padPagesToEven(pages) }),
 

@@ -5,7 +5,7 @@ import { Page } from '@/components/Page';
 import { PageFlip, type PageFlipDirection } from '@/components/PageFlip';
 import { useBookStore } from '@/store/useBookStore';
 
-export function BookViewer() {
+export function BookViewer({ editable = true }: { editable?: boolean }) {
   const pages = useBookStore((s) => s.pages);
   const currentPageIndex = useBookStore((s) => s.currentPageIndex);
   const goPrev = useBookStore((s) => s.goPrev);
@@ -44,12 +44,12 @@ export function BookViewer() {
 
         {/* Left Side Page */}
         <div className="absolute left-0 top-0 h-full w-1/2 flex items-center justify-center">
-          {leftPage && <Page pageId={leftPage.id} side="left" editable={!flipBusy} />}
+          {leftPage && <Page pageId={leftPage.id} side="left" editable={editable && !flipBusy} />}
         </div>
 
         {/* Right Side Page */}
         <div className="absolute right-0 top-0 h-full w-1/2 flex items-center justify-center">
-          {rightPage && <Page pageId={rightPage.id} side="right" editable={!flipBusy} />}
+          {rightPage && <Page pageId={rightPage.id} side="right" editable={editable && !flipBusy} />}
         </div>
 
         {/* Real-feel Hinge/Spine */}
