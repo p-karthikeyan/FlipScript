@@ -27,14 +27,13 @@ export function Page({
 
   // Synchronize content to DOM.
   useEffect(() => {
-    if (!editable) return;
-    // Only update if the content in the store is different from what we last set
-    // AND it's strictly different from what's currently in the DOM.
-    if (editableRef.current && content !== lastSentContent.current) {
-      if (editableRef.current.innerHTML !== content) {
-        editableRef.current.innerHTML = content;
-        lastSentContent.current = content;
-      }
+    if (!editableRef.current) return;
+    
+    // If the DOM is different from the store, update it.
+    // We use innerHTML directly because we are building a "handwritten" feel with HTML allowed (potentially).
+    if (editableRef.current.innerHTML !== content) {
+      editableRef.current.innerHTML = content;
+      lastSentContent.current = content;
     }
   }, [content, editable]);
 
@@ -182,7 +181,7 @@ export function Page({
       {/* Page number */}
       <div 
         suppressHydrationWarning
-        className={`absolute bottom-6 ${side === 'left' ? 'left-6' : 'right-6'} text-[11px] font-mono text-black/20 uppercase tracking-widest`}
+        className={`absolute bottom-6 ${side === 'left' ? 'left-6' : 'right-6'} text-[12px] font-mono font-bold text-black/40 uppercase tracking-widest`}
       >
          {pageId.slice(0, 4)}
       </div>
