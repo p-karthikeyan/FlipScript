@@ -31,6 +31,32 @@ export default function LandingPage() {
   return (
     <div className="relative min-h-screen w-full bg-[#0a0a0a] text-[#d4d4d4] overflow-hidden selection:bg-amber-900/30 font-sans">
       <CustomCursor />
+      
+      {/* Structured Data for SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "FlipScript",
+            "url": "https://flipscript.app",
+            "description": "An immersive digital book writing and reading platform with realistic page flips and secure storage.",
+            "applicationCategory": "DesignApplication, MultimediaApplication",
+            "operatingSystem": "All",
+            "keywords": "flip book, type online, book writing, reading online, digital manuscript",
+            "offers": {
+              "@type": "Offer",
+              "price": "0",
+              "priceCurrency": "USD"
+            },
+            "author": {
+              "@type": "Organization",
+              "name": "FlipScript"
+            }
+          })
+        }}
+      />
 
       {/* Background Ambience: Ink on Parchment style */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
