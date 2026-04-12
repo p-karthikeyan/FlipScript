@@ -55,7 +55,7 @@ type BookActions = {
   
   // Content Actions
   updatePage: (id: string, content: string) => void;
-  pushOverflow: (fromPageId: string, remainingContent: string, overflow: string) => void;
+  pushOverflow: (fromPageId: string, remainingContent: string, overflow: string, moveFocus?: boolean) => void;
   pullFromNext: (targetPageId: string) => void;
   
   // Navigation
@@ -72,8 +72,10 @@ type BookActions = {
 export type BookStore = Book & BookActions;
 
 const createDefaultPages = (): Page[] => [
-  { id: uid(), content: '' },
-  { id: uid(), content: '' },
+  { id: uid(), content: 'The journey begins on a blank page...' },
+  { id: uid(), content: 'Thoughts flow like a river across the spread.' },
+  { id: uid(), content: 'A new chapter in digital storytelling.' },
+  { id: uid(), content: 'The end is just the start of another tale.' },
 ];
 
 const padPagesToEven = (pages: Page[]): Page[] => {
@@ -117,7 +119,7 @@ export const useBookStore = create<BookStore>()(
         });
       },
 
-      pushOverflow: (fromPageId, remainingContent, overflow) => {
+      pushOverflow: (fromPageId, remainingContent, overflow, moveFocus = true) => {
         const { pages, currentPageIndex } = get();
         const fromIdx = pages.findIndex((p) => p.id === fromPageId);
         if (fromIdx === -1) return;
@@ -134,7 +136,11 @@ export const useBookStore = create<BookStore>()(
         }
 
         const paddedPages = padPagesToEven(nextPages);
-        set({ pages: paddedPages, focusedPageId: nextPages[fromIdx + 1].id, selectionOffset: 0 });
+        set({
+          pages: paddedPages,
+          focusedPageId: moveFocus ? nextPages[fromIdx + 1].id : get().focusedPageId,
+          selectionOffset: 0,
+        });
 
         // If the right-hand page (odd index) overflowed, flip the spread
         if (fromIdx % 2 !== 0 && fromIdx === currentPageIndex + 1) {

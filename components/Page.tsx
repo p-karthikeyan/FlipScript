@@ -1,8 +1,170 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useBookStore } from '@/store/useBookStore';
 
+// ── Cached page metrics ────────────────────────────────────────────────────────
+const metrics = {
+  width: 470,
+  height: 654,
+  fontSize: '18px',
+  lineHeight: '32.4px',
+  fontFamily: 'inherit',
+  fontWeight: 'normal',
+};
+
+function captureMetrics(el: HTMLDivElement) {
+  if (el.clientWidth > 0 && el.clientHeight > 0) {
+    metrics.width = el.clientWidth;
+    metrics.height = el.clientHeight;
+    const cs = window.getComputedStyle(el);
+    metrics.fontSize = cs.fontSize;
+    metrics.lineHeight = cs.lineHeight;
+    metrics.fontFamily = cs.fontFamily;
+    metrics.fontWeight = cs.fontWeight;
+  }
+}
+
+// ── Overflow measurement ───────────────────────────────────────────────────────
+function splitContent(
+  html: string,
+  width: number,
+  height: number,
+): { remaining: string; overflow: string } | null {
+  const baseStyle: Partial<CSSStyleDeclaration> = {
+    position: 'fixed',
+    visibility: 'hidden',
+    pointerEvents: 'none',
+    top: '-9999px',
+    left: '-9999px',
+    width: width + 'px',
+    height: 'auto',
+    overflow: 'visible',
+    fontSize: metrics.fontSize,
+    lineHeight: metrics.lineHeight,
+    fontFamily: metrics.fontFamily,
+    fontWeight: metrics.fontWeight,
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-word',
+    overflowWrap: 'break-word',
+  };
+
+  const outer = document.createElement('div');
+  const helper = document.createElement('div');
+  Object.assign(outer.style, baseStyle);
+  Object.assign(helper.style, baseStyle);
+  document.body.appendChild(outer);
+  document.body.appendChild(helper);
+
+  try {
+    outer.innerHTML = html;
+    if (outer.scrollHeight <= height + 4) return null;
+
+    const nodes = Array.from(outer.childNodes);
+
+    let splitIdx = nodes.length;
+    for (let i = 1; i <= nodes.length; i++) {
+      helper.innerHTML = '';
+      for (let j = 0; j < i; j++) helper.appendChild(nodes[j].cloneNode(true));
+      if (helper.scrollHeight > height) {
+        splitIdx = i - 1;
+        break;
+      }
+    }
+
+    const boundaryNode = nodes[splitIdx];
+    if (boundaryNode) {
+      const boundaryText = boundaryNode.textContent ?? '';
+      if (boundaryText.length > 0) {
+        let lo = 0, hi = boundaryText.length, fitLen = 0;
+        while (lo <= hi) {
+          const mid = Math.floor((lo + hi) / 2);
+          helper.innerHTML = '';
+          for (let j = 0; j < splitIdx; j++) helper.appendChild(nodes[j].cloneNode(true));
+          if (boundaryNode.nodeType === Node.TEXT_NODE) {
+            helper.appendChild(document.createTextNode(boundaryText.slice(0, mid)));
+          } else {
+            const partial = boundaryNode.cloneNode(false) as HTMLElement;
+            partial.textContent = boundaryText.slice(0, mid);
+            helper.appendChild(partial);
+          }
+          if (helper.scrollHeight <= height) { fitLen = mid; lo = mid + 1; }
+          else hi = mid - 1;
+        }
+
+        if (fitLen > 0) {
+          const fitText = boundaryText.slice(0, fitLen);
+          const lastSpace = fitText.lastIndexOf(' ');
+          const snap = lastSpace > 0 ? lastSpace : fitLen;
+
+          const rDiv = document.createElement('div');
+          for (let i = 0; i < splitIdx; i++) rDiv.appendChild(nodes[i].cloneNode(true));
+          if (snap > 0) {
+            if (boundaryNode.nodeType === Node.TEXT_NODE) {
+              rDiv.appendChild(document.createTextNode(boundaryText.slice(0, snap)));
+            } else {
+              const partial = boundaryNode.cloneNode(false) as HTMLElement;
+              partial.textContent = boundaryText.slice(0, snap);
+              rDiv.appendChild(partial);
+            }
+          }
+
+          const oDiv = document.createElement('div');
+          const restText = boundaryText.slice(snap).trimStart();
+          if (restText) {
+            if (boundaryNode.nodeType === Node.TEXT_NODE) {
+              oDiv.appendChild(document.createTextNode(restText));
+            } else {
+              const partial = boundaryNode.cloneNode(false) as HTMLElement;
+              partial.textContent = restText;
+              oDiv.appendChild(partial);
+            }
+          }
+          for (let i = splitIdx + 1; i < nodes.length; i++) oDiv.appendChild(nodes[i].cloneNode(true));
+
+          const overflow = oDiv.innerHTML;
+          if (overflow) return { remaining: rDiv.innerHTML, overflow };
+        }
+      }
+    }
+
+    if (splitIdx > 0) {
+      const rDiv = document.createElement('div');
+      const oDiv = document.createElement('div');
+      for (let i = 0; i < splitIdx; i++) rDiv.appendChild(nodes[i].cloneNode(true));
+      for (let i = splitIdx; i < nodes.length; i++) oDiv.appendChild(nodes[i].cloneNode(true));
+      const overflow = oDiv.innerHTML;
+      if (!overflow) return null;
+      return { remaining: rDiv.innerHTML, overflow };
+    }
+
+    const fullText = outer.innerText ?? outer.textContent ?? '';
+    let lo = 0, hi = fullText.length, fitLen = 0;
+    while (lo <= hi) {
+      const mid = Math.floor((lo + hi) / 2);
+      helper.textContent = fullText.slice(0, mid);
+      if (helper.scrollHeight <= height) { fitLen = mid; lo = mid + 1; }
+      else hi = mid - 1;
+    }
+    if (fitLen === 0) return null;
+
+    const fitText = fullText.slice(0, fitLen);
+    const lastSpace = fitText.lastIndexOf(' ');
+    const snap = lastSpace > 0 ? lastSpace : fitLen;
+    return {
+      remaining: fullText.slice(0, snap),
+      overflow: fullText.slice(snap).trimStart(),
+    };
+  } finally {
+    if (outer.parentNode) outer.parentNode.removeChild(outer);
+    if (helper.parentNode) helper.parentNode.removeChild(helper);
+  }
+}
+
+let isCascading = false;
+let isOverflowing = false;
+
+// ── Component ──────────────────────────────────────────────────────────────────
 export function Page({
   pageId,
   side,
@@ -12,178 +174,198 @@ export function Page({
   side: 'left' | 'right';
   editable?: boolean;
 }) {
-  const content = useBookStore((s) => s.pages.find((p) => p.id === pageId)?.content ?? '');
-  const updatePage = useBookStore((s) => s.updatePage);
-  const pushOverflow = useBookStore((s) => s.pushOverflow);
-  const pullFromNext = useBookStore((s) => s.pullFromNext);
-  const focusedPageId = useBookStore((s) => s.focusedPageId);
-  const selectionOffset = useBookStore((s) => s.selectionOffset);
-  const clearFocus = useBookStore((s) => s.clearFocus);
-
-  const lastSentContent = useRef(content);
+  // Container is the only React-managed DOM node.
+  // The editable div is created imperatively and appended to the container,
+  // so React never tracks its children and won't crash on unmount.
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const editableRef = useRef<HTMLDivElement | null>(null);
-  const mirrorRef = useRef<HTMLDivElement | null>(null);
-  const [isFocused, setIsFocused] = useState(false);
+  const placeholderRef = useRef<HTMLDivElement | null>(null);
+  const lastSentContent = useRef('');
+  const focusHandledRef = useRef(false);
+  const unmountedRef = useRef(false);
 
-  // Synchronize content to DOM.
-  useEffect(() => {
-    if (!editableRef.current) return;
-    
-    // If the DOM is different from the store, update it.
-    // We use innerHTML directly because we are building a "handwritten" feel with HTML allowed (potentially).
-    if (editableRef.current.innerHTML !== content) {
-      editableRef.current.innerHTML = content;
-      lastSentContent.current = content;
-    }
-  }, [content, editable]);
-
-  // Sync content to Mirror for measurement.
-  useEffect(() => {
-    if (mirrorRef.current && mirrorRef.current.innerHTML !== content) {
-      mirrorRef.current.innerHTML = content;
-    }
-  }, [content]);
-
-  // Handle cross-page focus transitions.
-  useEffect(() => {
-    if (focusedPageId === pageId && editableRef.current) {
-      editableRef.current.focus();
-      const selection = window.getSelection();
-      const range = document.createRange();
-      
-      // Focus at the end of the HTML content
-      range.selectNodeContents(editableRef.current);
-      range.collapse(false);
-      
-      selection?.removeAllRanges();
-      selection?.addRange(range);
-      clearFocus();
-    }
-  }, [focusedPageId, pageId, selectionOffset, clearFocus]);
-
-  const handleInput = () => {
-    const el = editableRef.current;
-    const mirror = mirrorRef.current;
-    if (!el || !mirror) return;
-
-    // Update mirror to current content
-    mirror.innerHTML = el.innerHTML;
-    
-    // Check for overflow
-    if (mirror.scrollHeight > el.clientHeight + 4) {
-      // Find the split point in HTML
-      // We use a binary search approach on child nodes for performance
-      const nodes = Array.from(el.childNodes);
-      const testMirror = mirror.cloneNode(false) as HTMLDivElement;
-      testMirror.style.visibility = 'hidden';
-      testMirror.style.position = 'absolute';
-      testMirror.style.top = '-9999px';
-      document.body.appendChild(testMirror);
-
-      let splitIdx = nodes.length;
-      for (let i = nodes.length; i >= 0; i--) {
-         testMirror.innerHTML = '';
-         for(let j=0; j<i; j++) {
-            testMirror.appendChild(nodes[j].cloneNode(true));
-         }
-         if (testMirror.scrollHeight <= el.clientHeight) {
-            splitIdx = i;
-            break;
-         }
-      }
-      
-      const remainingDiv = document.createElement('div');
-      const overflowDiv = document.createElement('div');
-      for(let i=0; i<splitIdx; i++) remainingDiv.appendChild(nodes[i].cloneNode(true));
-      for(let i=splitIdx; i<nodes.length; i++) overflowDiv.appendChild(nodes[i].cloneNode(true));
-
-      document.body.removeChild(testMirror);
-
-      const remaining = remainingDiv.innerHTML;
-      const overflow = overflowDiv.innerHTML;
-
-      if (overflow.length > 0) {
-        lastSentContent.current = remaining;
-        pushOverflow(pageId, remaining, overflow);
-        el.innerHTML = remaining;
-      }
-    } else {
-      lastSentContent.current = el.innerHTML;
-      updatePage(pageId, el.innerHTML);
-    }
+  const showPlaceholder = (show: boolean) => {
+    if (placeholderRef.current)
+      placeholderRef.current.style.display = show ? 'block' : 'none';
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    // Detect Backspace at start to pull from the PREVIOUS page's logic?
-    // Actually, store provides pullFromNext for the target page.
-    if (e.key === 'Backspace') {
-       const selection = window.getSelection();
-       if (selection && selection.isCollapsed && selection.anchorOffset === 0) {
-          // Double-check if we are at the absolute beginning
-          const range = selection.getRangeAt(0);
-          const preRange = range.cloneRange();
-          preRange.selectNodeContents(editableRef.current!);
-          preRange.setEnd(range.startContainer, range.startOffset);
-          
-          if (preRange.toString().length === 0) {
-             // We are at the start. Pull this page into the PREVIOUS one.
-             // This needs to be called on the previous page's id.
-             // But we only have this page id. We need the store to find prev.
-             // Or better, let the store handle pull(id) which pulls into previous?
-             // Actually, I defined pullFromNext(targetPageId) which pulls next into it.
-             // So I'll find previous and call pullFromNext on it.
+  // ── Create the editable div imperatively ──────────────────────────────────
+  useEffect(() => {
+    unmountedRef.current = false;
+    const container = containerRef.current;
+    if (!container) return;
+
+    const el = document.createElement('div');
+    el.contentEditable = editable ? 'true' : 'false';
+    el.spellcheck = false;
+    el.className = 'h-full w-full outline-none overflow-hidden whitespace-pre-wrap break-words text-[18px] leading-[1.8] text-[#2a1a0d]';
+    el.style.pointerEvents = editable ? 'auto' : 'none';
+    container.appendChild(el);
+    editableRef.current = el;
+
+    // Stamp initial content
+    const initial = useBookStore.getState().pages.find((p) => p.id === pageId)?.content ?? '';
+    lastSentContent.current = initial;
+    el.innerHTML = initial;
+    showPlaceholder(editable && initial.length === 0);
+
+    // ── Event handlers (attached imperatively) ───────────────────────────────
+    const onInput = () => {
+      if (unmountedRef.current) return;
+      captureMetrics(el);
+      if (el.scrollHeight <= el.clientHeight + 4) return;
+
+      const split = splitContent(el.innerHTML, el.clientWidth, el.clientHeight);
+      if (!split) return;
+
+      isOverflowing = true;
+      lastSentContent.current = split.remaining;
+      el.innerHTML = split.remaining;
+      isOverflowing = false;
+
+      useBookStore.getState().pushOverflow(pageId, split.remaining, split.overflow, true);
+    };
+
+    const onBlur = () => {
+      if (isOverflowing || unmountedRef.current) return;
+      showPlaceholder(editable && el.innerHTML.length === 0);
+      const html = el.innerHTML;
+      if (html === lastSentContent.current) return;
+      lastSentContent.current = html;
+      useBookStore.getState().updatePage(pageId, html);
+    };
+
+    const onFocus = () => {
+      showPlaceholder(false);
+      captureMetrics(el);
+    };
+
+    el.addEventListener('input', onInput);
+    el.addEventListener('blur', onBlur);
+    el.addEventListener('focus', onFocus);
+
+    // Cleanup: remove the imperatively-created element.
+    // React never knew about it, so no removeChild conflict.
+    return () => {
+      unmountedRef.current = true;
+      el.removeEventListener('input', onInput);
+      el.removeEventListener('blur', onBlur);
+      el.removeEventListener('focus', onFocus);
+      editableRef.current = null;
+      if (el.parentNode) el.parentNode.removeChild(el);
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editable]);
+
+  // ── Imperative store subscription ──────────────────────────────────────────
+  useEffect(() => {
+    const unsubscribe = useBookStore.subscribe((state) => {
+      if (unmountedRef.current) return;
+      const el = editableRef.current;
+      if (!el) return;
+
+      const page = state.pages.find((p) => p.id === pageId);
+      if (!page) return;
+
+      const newContent = page.content;
+      const isFocused = document.activeElement === el;
+
+      const shouldTakeFocus =
+        !isCascading &&
+        state.focusedPageId === pageId &&
+        !focusHandledRef.current;
+
+      if (newContent !== lastSentContent.current && !isFocused) {
+        lastSentContent.current = newContent;
+        el.innerHTML = newContent;
+        showPlaceholder(editable && newContent.length === 0);
+
+        const w = el.clientWidth > 0 ? el.clientWidth : metrics.width;
+        const h = el.clientHeight > 0 ? el.clientHeight : metrics.height;
+        const split = splitContent(newContent, w, h);
+        if (split) {
+          lastSentContent.current = split.remaining;
+          el.innerHTML = split.remaining;
+          isCascading = true;
+          useBookStore.getState().pushOverflow(pageId, split.remaining, split.overflow, false);
+          isCascading = false;
+        }
+      }
+
+      if (shouldTakeFocus) {
+        focusHandledRef.current = true;
+        useBookStore.getState().clearFocus();
+
+        let retries = 0;
+        const attemptFocus = () => {
+          if (unmountedRef.current) return;
+          if (!el.offsetParent && retries < 20) {
+            retries++;
+            setTimeout(attemptFocus, 80);
+            return;
           }
-       }
-    }
-  };
+          const latest = useBookStore.getState().pages.find((p) => p.id === pageId)?.content ?? '';
+          if (el.innerHTML !== latest) {
+            lastSentContent.current = latest;
+            el.innerHTML = latest;
+          }
+          el.focus();
+          const sel = window.getSelection();
+          if (sel) {
+            const range = document.createRange();
+            range.selectNodeContents(el);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+        };
+        requestAnimationFrame(attemptFocus);
+      } else if (state.focusedPageId !== pageId) {
+        focusHandledRef.current = false;
+      }
+    });
+    return unsubscribe;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageId, editable]);
 
-  const paperTextureStyles = side === 'left' 
-    ? 'linear-gradient(to right, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0) 10%), linear-gradient(to bottom, #fcfaf5, #efe3c9)'
-    : 'linear-gradient(to left, rgba(0,0,0,0.03) 0%, rgba(0,0,0,0) 10%), linear-gradient(to bottom, #fcfaf5, #efe3c9)';
+  // ── Pre-switch save ────────────────────────────────────────────────────────
+  useEffect(() => {
+    const save = () => {
+      const el = editableRef.current;
+      if (!el || !editable) return;
+      const html = el.innerHTML;
+      if (html !== lastSentContent.current) {
+        lastSentContent.current = html;
+        useBookStore.getState().updatePage(pageId, html);
+      }
+    };
+    window.addEventListener('flipscript:savepages', save);
+    return () => window.removeEventListener('flipscript:savepages', save);
+  }, [pageId, editable]);
+
+  const spineBoxShadow = side === 'left'
+    ? 'inset -10px 0 18px -6px rgba(0,0,0,0.28)'
+    : 'inset 10px 0 18px -6px rgba(0,0,0,0.28)';
 
   return (
-    <section className={`relative h-full w-full overflow-hidden bg-[#efe3c9] ${side === 'left' ? 'rounded-l-lg' : 'rounded-r-lg'}`}>
-      <div className="pointer-events-none absolute inset-0" style={{ backgroundImage: paperTextureStyles }} />
-      
-      {/* Decorative spine crease */}
-      <div className={`absolute top-0 h-full w-[20px] bg-black/5 blur-[4px] ${side === 'left' ? 'right-0 translate-x-1/2' : 'left-0 -translate-x-1/2'}`} />
-
-      {/* Main editable container */}
+    <section
+      className={`relative h-full w-full overflow-hidden bg-[#efe3c9] ${side === 'left' ? 'rounded-l-lg' : 'rounded-r-lg'}`}
+      style={{ boxShadow: spineBoxShadow }}
+    >
       <div className="relative h-full w-full p-10 mt-4">
-        {editable && content.length === 0 && !isFocused && (
-           <div className="pointer-events-none absolute left-10 top-14 text-[15px] leading-6 text-black/25 font-hand italic" style={{ fontFamily: 'var(--font-hand)' }}>
-             Begin your tale here...
-           </div>
+        {editable && (
+          <div
+            ref={placeholderRef}
+            className="pointer-events-none absolute left-10 top-14 text-[15px] leading-6 text-black/25 italic"
+            style={{ fontFamily: 'var(--font-hand)', display: 'none' }}
+          >
+            Begin your tale here...
+          </div>
         )}
-
-        <div
-          ref={editableRef}
-          contentEditable={editable}
-          suppressContentEditableWarning
-          spellCheck={false}
-          onInput={handleInput}
-          onKeyDown={handleKeyDown}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          className="h-full w-full outline-none overflow-hidden whitespace-pre-wrap break-words text-[18px] leading-[1.8] text-[#2a1a0d]"
-          style={{ fontFamily: 'var(--font-hand)' }}
-        />
-
-        {/* The Mirror: Invisible, but used to calculate height accurately */}
-        <div
-          ref={mirrorRef}
-          aria-hidden
-          className="pointer-events-none absolute left-10 right-10 top-14 opacity-0 h-auto whitespace-pre-wrap break-words text-[18px] leading-[1.8]"
-          style={{ fontFamily: 'var(--font-hand)', visibility: 'hidden' }}
-        />
-      </div>
-
-      {/* Page number */}
-      <div 
-        suppressHydrationWarning
-        className={`absolute bottom-6 ${side === 'left' ? 'left-6' : 'right-6'} text-[12px] font-mono font-bold text-black/40 uppercase tracking-widest`}
-      >
-         {pageId.slice(0, 4)}
+        {/* Container — React manages this empty div.
+            The contentEditable child is created/destroyed imperatively,
+            so React never tries to reconcile its innerHTML children. */}
+        <div ref={containerRef} className="h-full w-full" />
       </div>
     </section>
   );
