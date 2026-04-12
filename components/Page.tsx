@@ -200,6 +200,7 @@ export function Page({
     el.spellcheck = false;
     el.className = 'h-full w-full outline-none overflow-hidden whitespace-pre-wrap break-words text-[18px] leading-[1.8] text-[#2a1a0d]';
     el.style.pointerEvents = editable ? 'auto' : 'none';
+    el.style.fontFamily = 'var(--font-hand), cursive';
     container.appendChild(el);
     editableRef.current = el;
 
@@ -294,7 +295,10 @@ export function Page({
 
       if (shouldTakeFocus) {
         focusHandledRef.current = true;
-        useBookStore.getState().clearFocus();
+        // Don't clearFocus() here — clearing it triggers a subscription
+        // notification with focusedPageId=null, which resets focusHandledRef
+        // and causes a duplicate attemptFocus that destroys the cursor.
+        // Clear it inside attemptFocus after focus is established.
 
         let retries = 0;
         const attemptFocus = () => {
@@ -304,11 +308,14 @@ export function Page({
             setTimeout(attemptFocus, 80);
             return;
           }
+
+          // Sync DOM with latest store content before placing cursor
           const latest = useBookStore.getState().pages.find((p) => p.id === pageId)?.content ?? '';
           if (el.innerHTML !== latest) {
             lastSentContent.current = latest;
             el.innerHTML = latest;
           }
+
           el.focus();
           const sel = window.getSelection();
           if (sel) {
@@ -318,9 +325,14 @@ export function Page({
             sel.removeAllRanges();
             sel.addRange(range);
           }
+
+          // Now clear the store signal — focus is established.
+          useBookStore.getState().clearFocus();
         };
         requestAnimationFrame(attemptFocus);
-      } else if (state.focusedPageId !== pageId) {
+      } else if (state.focusedPageId !== null && state.focusedPageId !== pageId) {
+        // Only reset when a DIFFERENT page takes focus, not when clearFocus()
+        // sets focusedPageId to null. This prevents the double-fire chain.
         focusHandledRef.current = false;
       }
     });

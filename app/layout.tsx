@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Patrick_Hand } from "next/font/google";
+import { Geist, Geist_Mono, Patrick_Hand, Caveat, Dancing_Script, Indie_Flower, Shadows_Into_Light, Kalam } from "next/font/google";
 import { SessionProvider } from "next-auth/react";
 import "./globals.css";
 
@@ -17,6 +17,36 @@ const patrickHand = Patrick_Hand({
   variable: "--font-hand",
   subsets: ["latin"],
   weight: "400",
+});
+
+const caveat = Caveat({
+  variable: "--font-caveat",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const dancingScript = Dancing_Script({
+  variable: "--font-dancing",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const indieFlower = Indie_Flower({
+  variable: "--font-indie",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+const shadowsIntoLight = Shadows_Into_Light({
+  variable: "--font-shadows",
+  subsets: ["latin"],
+  weight: "400",
+});
+
+const kalam = Kalam({
+  variable: "--font-kalam",
+  subsets: ["latin"],
+  weight: ["300", "400", "700"],
 });
 
 export const metadata: Metadata = {
@@ -72,7 +102,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} ${patrickHand.variable} h-full antialiased`}
+      className={`${geistSans.variable} ${geistMono.variable} ${patrickHand.variable} ${caveat.variable} ${dancingScript.variable} ${indieFlower.variable} ${shadowsIntoLight.variable} ${kalam.variable} h-full antialiased`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-black" suppressHydrationWarning>

@@ -128,7 +128,50 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
         </div>
       )}
 
-      <div className="relative shadow-[0_50px_100px_-50px_rgba(0,0,0,1)] rounded-sm overflow-visible bg-[#241a0d]">
+      <div
+        className="relative shadow-[0_50px_100px_-50px_rgba(0,0,0,1)] rounded-sm overflow-visible bg-[#241a0d]"
+        ref={(node) => {
+          // react-pageflip reparents FlipPage DOM nodes internally.
+          // When React unmounts (new book, mode switch, Fast Refresh), it
+          // walks the fiber tree and calls removeChild on the original parent.
+          // But those nodes now live under react-pageflip's internal container,
+          // so removeChild throws NotFoundError.
+          // Patch removeChild on this container (and any child that React uses
+          // as a parent) to silently handle missing nodes.
+          if (node && !(node as any).__rcPatched) {
+            (node as any).__rcPatched = true;
+            const orig = node.removeChild.bind(node);
+            node.removeChild = function <T extends Node>(child: T): T {
+              if (child.parentNode !== node) return child;
+              return orig(child);
+            };
+            // Also patch all current and future child divs (react-pageflip
+            // creates wrapper divs that React may also try to clean up).
+            const observer = new MutationObserver(() => {
+              node.querySelectorAll('div').forEach((div) => {
+                if ((div as any).__rcPatched) return;
+                (div as any).__rcPatched = true;
+                const origDiv = div.removeChild.bind(div);
+                div.removeChild = function <T extends Node>(child: T): T {
+                  if (child.parentNode !== div) return child;
+                  return origDiv(child);
+                };
+              });
+            });
+            observer.observe(node, { childList: true, subtree: true });
+            // Run once immediately for existing children
+            node.querySelectorAll('div').forEach((div) => {
+              if ((div as any).__rcPatched) return;
+              (div as any).__rcPatched = true;
+              const origDiv = div.removeChild.bind(div);
+              div.removeChild = function <T extends Node>(child: T): T {
+                if (child.parentNode !== div) return child;
+                return origDiv(child);
+              };
+            });
+          }
+        }}
+      >
 
         {/* @ts-ignore */}
         <HTMLFlipBook

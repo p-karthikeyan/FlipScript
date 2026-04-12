@@ -47,6 +47,7 @@ function CustomDropdown({ options, value, onChange, className }: any) {
                       onChange(opt.value);
                       setOpen(false);
                     }}
+                    style={opt.style}
                     className={`w-full text-left px-4 py-2 text-[11px] hover:bg-amber-900/40 transition-colors ${value === opt.value ? 'bg-amber-900/20 text-amber-400' : 'text-amber-100/60'}`}
                   >
                     {opt.label}
@@ -74,7 +75,7 @@ export function FloatingNavbar() {
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [fontName, setFontName] = useState('var(--font-hand)');
+  const [fontName, setFontName] = useState('Patrick Hand');
   const [fontSize, setFontSize] = useState('5');
   const [refresh, setRefresh] = useState(0);
   const router = useRouter();
@@ -212,9 +213,14 @@ export function FloatingNavbar() {
                   exec('fontName', v);
                 }}
                 options={[
-                  { label: 'Patrick Hand', value: 'var(--font-hand)' },
-                  { label: 'Serif', value: 'serif' },
-                  { label: 'Sans Serif', value: 'sans-serif' }
+                  { label: 'Patrick Hand', value: 'Patrick Hand', style: { fontFamily: 'var(--font-hand), cursive', fontSize: '14px' } },
+                  { label: 'Caveat', value: 'Caveat', style: { fontFamily: 'var(--font-caveat), cursive', fontSize: '14px' } },
+                  { label: 'Dancing Script', value: 'Dancing Script', style: { fontFamily: 'var(--font-dancing), cursive', fontSize: '14px' } },
+                  { label: 'Indie Flower', value: 'Indie Flower', style: { fontFamily: 'var(--font-indie), cursive', fontSize: '14px' } },
+                  { label: 'Shadows Into Light', value: 'Shadows Into Light', style: { fontFamily: 'var(--font-shadows), cursive', fontSize: '14px' } },
+                  { label: 'Kalam', value: 'Kalam', style: { fontFamily: 'var(--font-kalam), cursive', fontSize: '14px' } },
+                  { label: 'Serif', value: 'serif', style: { fontFamily: 'serif', fontSize: '13px' } },
+                  { label: 'Sans Serif', value: 'sans-serif', style: { fontFamily: 'sans-serif', fontSize: '13px' } },
                 ]}
                 className="h-8"
               />
