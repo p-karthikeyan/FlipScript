@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, useCallback, ReactNode, forwardRef } from 'react';
 import { useBookStore } from '@/store/useBookStore';
 import { Page } from '@/components/Page';
+import { CoverPage } from '@/components/CoverPage';
 import HTMLFlipBook from 'react-pageflip';
 
 const FlipPage = forwardRef<HTMLDivElement, { children: ReactNode; className?: string }>((props, ref) => {
@@ -25,6 +26,9 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
   const pages = useBookStore((s) => s.pages);
   const currentPageIndex = useBookStore((s) => s.currentPageIndex);
   const setPageIndex = useBookStore((s) => s.setPageIndex);
+  const title = useBookStore((s) => s.title);
+  const coverImage = useBookStore((s) => s.coverImage);
+  const penName = useBookStore((s) => s.penName);
 
   const bookRef = useRef<any>(null);
   const [isMounted, setIsMounted] = useState(false);
@@ -85,12 +89,6 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
 
   const totalPages = pages.length;
 
-  // Unique key that changes whenever the book itself changes (new book / loaded book)
-  // or the mode toggles. This forces HTMLFlipBook to fully unmount before remounting,
-  // so react-pageflip's internally-reparented DOM nodes are destroyed cleanly instead
-  // of React trying to removeChild from stale parents.
-  // Uses the first page ID as a stable book identity — it only changes when a new
-  // book is created or loaded, NOT when overflow adds pages at the end.
   const bookIdentity = pages[0]?.id ?? 'empty';
   const bookKey = `${isEditMode ? 'edit' : 'flip'}-${bookIdentity}`;
 
@@ -184,7 +182,7 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
           minHeight={400}
           maxHeight={1533}
           maxShadowOpacity={0.8}
-          showCover={false}
+          showCover={true}
           mobileScrollSupport={true}
           onFlip={onFlip}
           className="flip-book-canvas"
@@ -201,6 +199,11 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
           showPageCorners={!isEditMode}
           disableFlipByClick={isEditMode}
         >
+          {/* Cover page — always the first page, shown full-width as a closed book cover */}
+          <FlipPage key="cover">
+            <CoverPage title={title} coverImage={coverImage} penName={penName} />
+          </FlipPage>
+
           {pages.map((page, idx) => (
             <FlipPage key={page.id}>
               <Page
@@ -223,7 +226,7 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
           Previous
         </button>
         <div className="text-[10px] font-mono tracking-[0.4em] uppercase text-white/40 font-bold border-x border-white/5 px-6">
-          {Math.floor(currentPageIndex / 2) + 1} / {Math.ceil(totalPages / 2)}
+          {currentPageIndex === 0 ? 'Cover' : `${Math.floor(currentPageIndex / 2)} / ${Math.ceil(totalPages / 2)}`}
         </div>
         <button
           onClick={() => bookRef.current?.pageFlip().flipNext()}

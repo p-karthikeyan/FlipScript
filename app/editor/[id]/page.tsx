@@ -56,10 +56,16 @@ export default function EditorPage() {
         }
 
         setIsOwner(!!owner);
-        setBook({ 
-          title: data.title, 
+        setBook({
+          title: data.title,
           pages: sanitizedPages,
-          shareId: data.shareId
+          shareId: data.shareId,
+          coverImage: data.coverImage ?? null,
+          penName: data.penName ?? null,
+          publishedAt: data.publishedAt ?? null,
+          isPublic: data.isPublic ?? false,
+          publishStatus: data.publishStatus ?? 'none',
+          publishRequestedAt: data.publishRequestedAt ?? null,
         });
         setLoading(false);
       } else if (res.status === 401) {

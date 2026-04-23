@@ -11,9 +11,6 @@ const customStorage = {
   setItem: (name: string, value: string) => {
     if (typeof window === 'undefined') return;
     const path = window.location.pathname;
-    // Only persist to localStorage if writing as a guest.
-    // If authenticated, we fetch directly from DB. Persisting to 
-    // localStorage will leak the book's title to other authenticated books.
     if (path.includes('/editor/guest') || path === '/') {
       localStorage.setItem(name, value);
     }
@@ -31,42 +28,56 @@ export type Page = {
   content: string;
 };
 
+export type PublishStatus = 'none' | 'pending' | 'approved' | 'rejected';
+
 export type Book = {
   title: string;
   pages: Page[];
-  /**
-   * The left-hand page of the currently visible spread.
-   * This index is always even (0, 2, 4, ...).
-   */
   currentPageIndex: number;
   focusedPageId: string | null;
-  /**
-   * Offset for caret placement when focusing.
-   */
   selectionOffset: number;
   isPublic: boolean;
   isOwner: boolean;
   shareId?: string | null;
+  coverImage?: string | null;
+  penName?: string | null;
+  publishedAt?: string | null;
+  publishStatus?: PublishStatus;
+  publishRequestedAt?: string | null;
 };
 
 type BookActions = {
   newBook: () => void;
   setTitle: (title: string) => void;
-  
+
   // Content Actions
   updatePage: (id: string, content: string) => void;
   pushOverflow: (fromPageId: string, remainingContent: string, overflow: string, moveFocus?: boolean) => void;
   pullFromNext: (targetPageId: string) => void;
-  
+
   // Navigation
   goNext: () => void;
   goPrev: () => void;
   clearFocus: () => void;
   setPageIndex: (index: number) => void;
-  setBook: (book: { title: string, pages: Page[], isPublic?: boolean, shareId?: string }) => void;
+  setBook: (book: {
+    title: string;
+    pages: Page[];
+    isPublic?: boolean;
+    shareId?: string;
+    coverImage?: string | null;
+    penName?: string | null;
+    publishedAt?: string | null;
+    publishStatus?: PublishStatus;
+    publishRequestedAt?: string | null;
+  }) => void;
   setPages: (pages: Page[]) => void;
   setIsPublic: (isPublic: boolean) => void;
   setIsOwner: (isOwner: boolean) => void;
+  setCoverImage: (url: string | null) => void;
+  setPenName: (name: string | null) => void;
+  setPublishedAt: (date: string | null) => void;
+  setPublishStatus: (status: PublishStatus) => void;
 };
 
 export type BookStore = Book & BookActions;
@@ -94,8 +105,13 @@ export const useBookStore = create<BookStore>()(
       focusedPageId: null,
       selectionOffset: 0,
       isPublic: false,
-      isOwner: true, // Default to true for guest mode
+      isOwner: true,
       shareId: null,
+      coverImage: null,
+      penName: null,
+      publishedAt: null,
+      publishStatus: 'none',
+      publishRequestedAt: null,
 
       newBook: () => {
         set({
@@ -107,6 +123,11 @@ export const useBookStore = create<BookStore>()(
           isPublic: false,
           isOwner: true,
           shareId: null,
+          coverImage: null,
+          penName: null,
+          publishedAt: null,
+          publishStatus: 'none',
+          publishRequestedAt: null,
         });
       },
 
@@ -114,9 +135,7 @@ export const useBookStore = create<BookStore>()(
 
       updatePage: (id, content) => {
         const { pages } = get();
-        set({
-          pages: pages.map((p) => (p.id === id ? { ...p, content } : p)),
-        });
+        set({ pages: pages.map((p) => (p.id === id ? { ...p, content } : p)) });
       },
 
       pushOverflow: (fromPageId, remainingContent, overflow, moveFocus = true) => {
@@ -127,11 +146,9 @@ export const useBookStore = create<BookStore>()(
         const nextPages = [...pages];
         nextPages[fromIdx].content = remainingContent;
 
-        // If it's the last page, create a new one
         if (fromIdx === pages.length - 1) {
           nextPages.push({ id: uid(), content: overflow });
         } else {
-          // Prepend to next page
           nextPages[fromIdx + 1].content = overflow + nextPages[fromIdx + 1].content;
         }
 
@@ -142,7 +159,6 @@ export const useBookStore = create<BookStore>()(
           selectionOffset: 0,
         });
 
-        // If the right-hand page (odd index) overflowed, flip the spread
         if (fromIdx % 2 !== 0 && fromIdx === currentPageIndex + 1) {
           set({ currentPageIndex: currentPageIndex + 2 });
         }
@@ -156,12 +172,9 @@ export const useBookStore = create<BookStore>()(
         const nextIdx = idx + 1;
         const nextContent = pages[nextIdx].content;
         const newPages = [...pages];
-
-        // Merge content
         const targetOldLength = newPages[idx].content.length;
         newPages[idx].content += nextContent;
-        
-        // Remove the next page if it's beyond the first spread and we can shrink
+
         if (newPages.length > 2) {
           newPages.splice(nextIdx, 1);
         } else {
@@ -169,13 +182,8 @@ export const useBookStore = create<BookStore>()(
         }
 
         const paddedPages = padPagesToEven(newPages);
-        set({ 
-          pages: paddedPages, 
-          focusedPageId: targetPageId, 
-          selectionOffset: targetOldLength 
-        });
+        set({ pages: paddedPages, focusedPageId: targetPageId, selectionOffset: targetOldLength });
 
-        // Re-check navigation boundaries
         if (currentPageIndex >= paddedPages.length) {
           set({ currentPageIndex: Math.max(0, paddedPages.length - 2) });
         }
@@ -183,16 +191,12 @@ export const useBookStore = create<BookStore>()(
 
       goNext: () => {
         const { pages, currentPageIndex } = get();
-        if (currentPageIndex + 2 < pages.length) {
-          set({ currentPageIndex: currentPageIndex + 2 });
-        }
+        if (currentPageIndex + 2 < pages.length) set({ currentPageIndex: currentPageIndex + 2 });
       },
 
       goPrev: () => {
         const { currentPageIndex } = get();
-        if (currentPageIndex - 2 >= 0) {
-          set({ currentPageIndex: currentPageIndex - 2 });
-        }
+        if (currentPageIndex - 2 >= 0) set({ currentPageIndex: currentPageIndex - 2 });
       },
 
       setPageIndex: (index) => {
@@ -207,6 +211,11 @@ export const useBookStore = create<BookStore>()(
           pages: padPagesToEven(initialPages),
           isPublic: book.isPublic ?? false,
           shareId: book.shareId ?? null,
+          coverImage: book.coverImage ?? null,
+          penName: book.penName ?? null,
+          publishedAt: book.publishedAt ?? null,
+          publishStatus: (book.publishStatus as PublishStatus) ?? 'none',
+          publishRequestedAt: book.publishRequestedAt ?? null,
           currentPageIndex: 0,
           focusedPageId: null,
           selectionOffset: 0,
@@ -215,13 +224,16 @@ export const useBookStore = create<BookStore>()(
 
       setIsPublic: (isPublic) => set({ isPublic }),
       setIsOwner: (isOwner) => set({ isOwner }),
-
       setPages: (pages) => set({ pages: padPagesToEven(pages) }),
+      setCoverImage: (url) => set({ coverImage: url }),
+      setPenName: (name) => set({ penName: name }),
+      setPublishedAt: (date) => set({ publishedAt: date }),
+      setPublishStatus: (status) => set({ publishStatus: status }),
 
       clearFocus: () => set({ focusedPageId: null, selectionOffset: 0 }),
     }),
     {
-      name: 'storywriter_v3', // New version for DB sync
+      name: 'storywriter_v3',
       version: 3,
       storage: createJSONStorage(() => customStorage),
     },
