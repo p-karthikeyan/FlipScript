@@ -227,7 +227,7 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
           Previous
         </button>
         <div className="text-[10px] font-mono tracking-[0.4em] uppercase text-white/40 font-bold border-x border-white/5 px-6">
-          {currentPageIndex === 0 ? 'Cover' : `${Math.floor(currentPageIndex / 2)} / ${Math.ceil(totalPages / 2)}`}
+          {currentPageIndex === 0 ? 'Cover' : `${Math.ceil(currentPageIndex / 2)} / ${Math.ceil(totalPages / 2)}`}
         </div>
         <button
           onClick={() => bookRef.current?.pageFlip().flipNext()}

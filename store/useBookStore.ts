@@ -200,8 +200,7 @@ export const useBookStore = create<BookStore>()(
       },
 
       setPageIndex: (index) => {
-        const normalized = index % 2 === 0 ? index : index - 1;
-        set({ currentPageIndex: Math.max(0, normalized) });
+        set({ currentPageIndex: Math.max(0, index) });
       },
 
       setBook: (book) => {
