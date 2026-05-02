@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
-import { Feather } from 'lucide-react';
+import { MousePointer2 } from 'lucide-react';
 
 export function CustomCursor() {
   const [sparkles, setSparkles] = useState<{ id: number; x: number; y: number }[]>([]);
@@ -87,14 +87,14 @@ export function CustomCursor() {
         style={{
           x: cursorX,
           y: cursorY,
-          translateX: "-85%", // Adjust so the feather tip (top-right) is near the actual pointer position
-          translateY: "-15%"
+          translateX: "-2px",
+          translateY: "-2px",
         }}
       >
         {/* Glow */}
         <div className="absolute w-20 h-20 bg-amber-500/20 blur-xl rounded-full -z-10" />
-        {/* Feather */}
-        <Feather className="w-8 h-8 text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
+        {/* Pointer */}
+        <MousePointer2 className="w-7 h-7 text-amber-500 drop-shadow-[0_0_10px_rgba(245,158,11,0.8)]" />
       </motion.div>
     </>
   );
