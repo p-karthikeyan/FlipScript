@@ -40,10 +40,12 @@ export default function PublicViewerPage() {
         // Update Store
         const owner = session?.user && data.userId === (session.user as any).id;
         setIsOwner(!!owner);
-        setBook({ 
-          title: data.title, 
+        setBook({
+          title: data.title,
           pages: sanitizedPages,
-          shareId: data.shareId
+          shareId: data.shareId,
+          coverImage: data.coverImage ?? null,
+          penName: data.penName ?? null,
         });
         setLoading(false);
       } else {

@@ -6,16 +6,17 @@ import { Page } from '@/components/Page';
 import { CoverPage } from '@/components/CoverPage';
 import HTMLFlipBook from 'react-pageflip';
 
-const FlipPage = forwardRef<HTMLDivElement, { children: ReactNode; className?: string }>((props, ref) => {
+const FlipPage = forwardRef<HTMLDivElement, { children: ReactNode; className?: string; 'data-density'?: 'soft' | 'hard' }>((props, ref) => {
+  const { children, className, 'data-density': density = 'soft' } = props;
   return (
     <div
       ref={ref}
-      className={`page ${props.className ?? ''}`}
-      data-density="soft"
+      className={`page ${className ?? ''}`}
+      data-density={density}
       style={{ height: '100%', overflow: 'hidden' }}
     >
       <div className="page-content h-full w-full">
-        {props.children}
+        {children}
       </div>
     </div>
   );
@@ -127,7 +128,7 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
       )}
 
       <div
-        className="relative shadow-[0_50px_100px_-50px_rgba(0,0,0,1)] rounded-sm overflow-visible bg-[#241a0d]"
+        className="relative shadow-[0_50px_100px_-50px_rgba(0,0,0,1)] rounded-sm overflow-visible"
         ref={(node) => {
           // react-pageflip reparents FlipPage DOM nodes internally.
           // When React unmounts (new book, mode switch, Fast Refresh), it
@@ -200,7 +201,7 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
           disableFlipByClick={isEditMode}
         >
           {/* Cover page — always the first page, shown full-width as a closed book cover */}
-          <FlipPage key="cover">
+          <FlipPage key="cover" data-density="hard">
             <CoverPage title={title} coverImage={coverImage} penName={penName} />
           </FlipPage>
 
@@ -239,7 +240,7 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
       <style jsx global>{`
         .flip-book-canvas {
           box-shadow: 0 0 30px rgba(0,0,0,0.5);
-          background-color: #efe3c9;
+          background-color: transparent !important;
         }
         .page {
           background-color: #efe3c9;
@@ -252,11 +253,8 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
           background-color: #efe3c9;
           box-shadow: inset 0 0 40px rgba(0,0,0,0.02);
         }
-        .stf__item {
-          background-color: #efe3c9 !important;
-        }
         .stf__block {
-          background-color: #efe3c9 !important;
+          background-color: transparent !important;
         }
         .stPageFlip {
           overflow: visible !important;
