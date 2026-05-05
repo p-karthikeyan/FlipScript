@@ -91,7 +91,7 @@ export default function RackPage() {
                   {/* Book cover */}
                   <div
                     className="relative overflow-hidden rounded-xl shadow-xl shadow-black/50 transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl"
-                    style={{ aspectRatio: '2/3' }}
+                    style={{ aspectRatio: '550/750' }}
                   >
                     {book.coverImage ? (
                       <img

@@ -11,10 +11,11 @@ interface CoverUploadModalProps {
   currentCover?: string | null;
 }
 
-// 2:3 aspect ratio (portrait book cover)
-const CROP_RATIO = 2 / 3;
-const OUTPUT_W = 600;
-const OUTPUT_H = 900;
+// Match the exact flip-book page dimensions (550×750) so the crop
+// is pixel-perfect everywhere it is displayed with no extra zoom.
+const CROP_RATIO = 550 / 750;
+const OUTPUT_W = 550;
+const OUTPUT_H = 750;
 
 export function CoverUploadModal({ isOpen, onClose, onUpload, currentCover }: CoverUploadModalProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -26,6 +27,9 @@ export function CoverUploadModal({ isOpen, onClose, onUpload, currentCover }: Co
   const [naturalH, setNaturalH] = useState(0);
   const [displayW, setDisplayW] = useState(0);
   const [displayH, setDisplayH] = useState(0);
+  // Explicit pixel dims we render the img element at (no object-fit distortion)
+  const [imgW, setImgW] = useState<number | null>(null);
+  const [imgH, setImgH] = useState<number | null>(null);
 
   // Crop box in display pixels
   const [crop, setCrop] = useState({ x: 0, y: 0, w: 0, h: 0 });
@@ -72,12 +76,26 @@ export function CoverUploadModal({ isOpen, onClose, onUpload, currentCover }: Co
     const img = imgRef.current;
     const container = containerRef.current;
     if (!img || !container) return;
-    setNaturalW(img.naturalWidth);
-    setNaturalH(img.naturalHeight);
-    const rect = img.getBoundingClientRect();
-    setDisplayW(rect.width);
-    setDisplayH(rect.height);
-    initCrop(rect.width, rect.height);
+
+    const natW = img.naturalWidth;
+    const natH = img.naturalHeight;
+    setNaturalW(natW);
+    setNaturalH(natH);
+
+    // Calculate actual rendered size from natural dimensions + container constraints.
+    // Using getBoundingClientRect() on an object-contain img returns the element box
+    // (full container width), not the letterboxed content area — causing wrong crop math.
+    const maxW = container.clientWidth;
+    const maxH = 420;
+    const scale = Math.min(maxW / natW, maxH / natH);
+    const dw = Math.round(natW * scale);
+    const dh = Math.round(natH * scale);
+
+    setImgW(dw);
+    setImgH(dh);
+    setDisplayW(dw);
+    setDisplayH(dh);
+    initCrop(dw, dh);
   };
 
   // Drag the crop box
@@ -159,6 +177,8 @@ export function CoverUploadModal({ isOpen, onClose, onUpload, currentCover }: Co
   const reset = () => {
     setImageSrc(null);
     setStep('pick');
+    setImgW(null);
+    setImgH(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -188,7 +208,7 @@ export function CoverUploadModal({ isOpen, onClose, onUpload, currentCover }: Co
                   {step === 'pick' ? 'Upload Cover' : 'Crop Cover'}
                 </h2>
                 <p className="text-xs text-amber-100/30 mt-0.5">
-                  {step === 'pick' ? 'Choose an image for your book cover' : 'Drag the box to set the crop area (2:3)'}
+                  {step === 'pick' ? 'Choose an image for your book cover' : 'Drag the box to set the crop area (11:15)'}
                 </p>
               </div>
               <button
@@ -205,7 +225,7 @@ export function CoverUploadModal({ isOpen, onClose, onUpload, currentCover }: Co
                   {/* Current cover preview */}
                   {currentCover && (
                     <div className="flex items-center gap-4 p-3 bg-white/5 rounded-2xl border border-white/5">
-                      <img src={currentCover} alt="Current cover" className="w-12 h-18 object-cover rounded-lg" style={{ aspectRatio: '2/3' }} />
+                      <img src={currentCover} alt="Current cover" className="w-12 object-cover rounded-lg" style={{ aspectRatio: '550/750' }} />
                       <div>
                         <p className="text-xs text-amber-100/50">Current cover</p>
                         <p className="text-xs text-amber-100/20 mt-0.5">Upload a new one to replace it</p>
@@ -225,7 +245,7 @@ export function CoverUploadModal({ isOpen, onClose, onUpload, currentCover }: Co
                     </div>
                     <div className="text-center">
                       <p className="text-sm font-bold text-amber-100/60">Drop image here or click to browse</p>
-                      <p className="text-xs text-amber-100/20 mt-1">JPG, PNG, WEBP — will be cropped to 2:3</p>
+                      <p className="text-xs text-amber-100/20 mt-1">JPG, PNG, WEBP — will be cropped to book size</p>
                     </div>
                     <div className="flex items-center gap-2 px-4 py-2 bg-amber-900/20 border border-amber-900/30 rounded-xl text-amber-400 text-xs font-bold uppercase tracking-wider hover:bg-amber-900/30 transition-colors">
                       <Upload className="w-3.5 h-3.5" />
@@ -243,11 +263,16 @@ export function CoverUploadModal({ isOpen, onClose, onUpload, currentCover }: Co
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {/* Crop area */}
+                  {/* Crop area — container is sized to the exact image pixel dimensions
+                      so crop box coords map 1-to-1 with no letterbox offset. */}
                   <div
                     ref={containerRef}
-                    className="relative select-none overflow-hidden rounded-2xl bg-black/40"
-                    style={{ maxHeight: '420px' }}
+                    className="relative select-none overflow-hidden rounded-2xl bg-black/40 mx-auto"
+                    style={{
+                      width: imgW ?? '100%',
+                      height: imgH ?? 'auto',
+                      minHeight: '120px',
+                    }}
                   >
                     {/* Dim overlay around crop */}
                     <div className="absolute inset-0 bg-black/50 pointer-events-none z-10" />
@@ -257,8 +282,13 @@ export function CoverUploadModal({ isOpen, onClose, onUpload, currentCover }: Co
                       src={imageSrc!}
                       alt="Crop preview"
                       onLoad={onImgLoad}
-                      className="block w-full object-contain"
-                      style={{ maxHeight: '420px' }}
+                      className="block"
+                      style={{
+                        width: imgW ?? '100%',
+                        height: imgH ?? 'auto',
+                        maxWidth: '100%',
+                        maxHeight: '420px',
+                      }}
                       draggable={false}
                     />
 
@@ -287,7 +317,7 @@ export function CoverUploadModal({ isOpen, onClose, onUpload, currentCover }: Co
                       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                         <div className="flex items-center gap-1 bg-black/60 rounded-lg px-2 py-1">
                           <Crop className="w-3 h-3 text-amber-400" />
-                          <span className="text-[10px] text-amber-300 font-bold">2 : 3</span>
+                          <span className="text-[10px] text-amber-300 font-bold">11 : 15</span>
                         </div>
                       </div>
                     </div>

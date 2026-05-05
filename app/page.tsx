@@ -228,7 +228,7 @@ export default function LandingPage() {
                   {/* Cover */}
                   <div
                     className="relative overflow-hidden rounded-2xl shadow-xl shadow-black/60 transition-shadow duration-300 group-hover:shadow-2xl group-hover:shadow-amber-900/20"
-                    style={{ aspectRatio: '2/3' }}
+                    style={{ aspectRatio: '550/750' }}
                   >
                     {book.coverImage ? (
                       <img

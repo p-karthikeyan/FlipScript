@@ -35,6 +35,7 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
   const [isMounted, setIsMounted] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const isEditModeRef = useRef(isEditMode);
+  const [showBook, setShowBook] = useState(() => currentPageIndex > 0);
 
   useEffect(() => { setIsMounted(true); }, []);
 
@@ -75,8 +76,22 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
     }
   }, [currentPageIndex, isMounted]);
 
+  const handleOpenBook = useCallback(() => {
+    setShowBook(true);
+    // Give React one frame to mount the flip book before calling flipNext
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        bookRef.current?.pageFlip().flipNext();
+      });
+    });
+  }, []);
+
   const onFlip = useCallback((e: any) => {
     setPageIndex(e.data);
+    // When flipping back to cover, hide the book after the animation finishes
+    if (e.data === 0) {
+      setTimeout(() => setShowBook(false), 700);
+    }
   }, [setPageIndex]);
 
 
@@ -127,7 +142,27 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
         </div>
       )}
 
-      <div
+      {/* ── Closed-book cover card ───────────────────────────────────────── */}
+      {!showBook && (
+        <div
+          className="relative cursor-pointer group rounded-sm overflow-hidden shadow-[0_50px_100px_-50px_rgba(0,0,0,0.9)]"
+          style={{ width: '550px', height: '750px' }}
+          onClick={handleOpenBook}
+        >
+          <CoverPage title={title} coverImage={coverImage} penName={penName} />
+          {/* Hover overlay */}
+          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-all duration-300" />
+          {/* Open hint */}
+          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-7 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <span className="text-[10px] tracking-[0.45em] uppercase text-amber-200/80 font-bold">
+              Open Book
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* ── Flip book ─────────────────────────────────────────────────────── */}
+      {showBook && <div
         className="relative shadow-[0_50px_100px_-50px_rgba(0,0,0,1)] rounded-sm overflow-visible"
         ref={(node) => {
           // react-pageflip reparents FlipPage DOM nodes internally.
@@ -216,10 +251,10 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
           ))}
         </HTMLFlipBook>
 
-      </div>
+      </div>}
 
-      {/* Navigation */}
-      <div className="mt-8 flex items-center gap-8 bg-black/20 backdrop-blur-sm px-8 py-3 rounded-full border border-white/5 transition-all hover:bg-black/30 group">
+      {/* Navigation — only shown when the book is open */}
+      {showBook && <div className="mt-8 flex items-center gap-8 bg-black/20 backdrop-blur-sm px-8 py-3 rounded-full border border-white/5 transition-all hover:bg-black/30 group">
         <button
           onClick={() => bookRef.current?.pageFlip().flipPrev()}
           className="text-[11px] font-bold tracking-[0.2em] text-white/20 hover:text-amber-500/80 transition-colors uppercase"
@@ -235,7 +270,7 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
         >
           Next
         </button>
-      </div>
+      </div>}
 
       <style jsx global>{`
         .flip-book-canvas {

@@ -119,7 +119,7 @@ export default function Dashboard() {
             <button
               onClick={createBook}
               className="group relative overflow-hidden rounded-2xl border-2 border-dashed border-amber-900/30 hover:border-amber-700/50 bg-amber-900/5 hover:bg-amber-900/10 transition-all shadow-xl shadow-black/40 flex flex-col items-center justify-center gap-4"
-              style={{ aspectRatio: '2/3' }}
+              style={{ aspectRatio: '550/750' }}
             >
               <div className="w-14 h-14 rounded-full border border-amber-900/30 flex items-center justify-center bg-black/30 group-hover:scale-110 transition-transform">
                 <Plus className="w-7 h-7 text-amber-500/60" />
@@ -144,7 +144,7 @@ export default function Dashboard() {
               {/* Cover */}
               <div
                 className="relative overflow-hidden rounded-2xl shadow-xl shadow-black/50 transition-shadow duration-300 group-hover:shadow-2xl"
-                style={{ aspectRatio: '2/3' }}
+                style={{ aspectRatio: '550/750' }}
               >
                 {book.coverImage ? (
                   <img
