@@ -9,6 +9,7 @@ import { useEffect, useState } from "react";
 import { AuthModal } from "@/components/AuthModal";
 import { CustomCursor } from "@/components/CustomCursor";
 import { FeaturesShowcase } from "@/components/FeaturesShowcase";
+import { AboutBook } from "@/components/AboutBook";
 
 export default function LandingPage() {
   const { data: session, status } = useSession();
@@ -278,6 +279,38 @@ export default function LandingPage() {
             ))}
           </div>
         )}
+      </section>
+
+      {/* About Us Section */}
+      <section className="relative z-10 px-4 sm:px-8 pb-32 max-w-7xl mx-auto">
+        <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-amber-900/30 to-transparent mb-24" />
+
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-900/5 border border-amber-900/20 text-[10px] font-bold uppercase tracking-[0.35em] text-amber-600/70 mb-6">
+            <BookOpen className="w-3 h-3" />
+            Our story
+          </div>
+          <h2 className="text-5xl md:text-6xl font-hand font-bold text-amber-50/80 leading-tight">
+            About Us
+          </h2>
+          <p className="mt-4 text-xl font-hand text-amber-100/25 italic max-w-xl mx-auto">
+            Flip through the pages to learn who we are and where we&apos;re going.
+          </p>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 32 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.15 }}
+        >
+          <AboutBook />
+        </motion.div>
       </section>
 
       {/* Footer */}
