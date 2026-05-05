@@ -6,6 +6,94 @@ import { Page } from '@/components/Page';
 import { CoverPage } from '@/components/CoverPage';
 import HTMLFlipBook from 'react-pageflip';
 
+const QUOTE = '"A reader lives a thousand lives before he dies. The man who never reads lives only one."';
+const ATTRIBUTION = '— George R.R. Martin';
+
+function QuotePanel() {
+  const [displayed, setDisplayed] = useState('');
+  const [showAttr, setShowAttr] = useState(false);
+  const idx = useRef(0);
+
+  useEffect(() => {
+    idx.current = 0;
+    setDisplayed('');
+    setShowAttr(false);
+    const interval = setInterval(() => {
+      idx.current += 1;
+      setDisplayed(QUOTE.slice(0, idx.current));
+      if (idx.current >= QUOTE.length) {
+        clearInterval(interval);
+        setTimeout(() => setShowAttr(true), 400);
+      }
+    }, 38);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div
+      className="absolute inset-y-0 left-0 flex flex-col items-center justify-center pointer-events-none select-none"
+      style={{ width: '550px' }}
+    >
+      <div className="flex flex-col gap-8 px-12">
+        <p
+          className="text-[28px] leading-[1.75] text-amber-100/20"
+          style={{ fontFamily: 'var(--font-hand), cursive', minHeight: '7rem' }}
+        >
+          {displayed}
+          <span className="inline-block w-[2px] h-[1.1em] bg-amber-400/30 ml-0.5 align-middle animate-pulse" />
+        </p>
+        <p
+          className="text-right text-[14px] tracking-[0.25em] uppercase text-amber-400/25 transition-opacity duration-700"
+          style={{ fontFamily: 'var(--font-hand), cursive', opacity: showAttr ? 1 : 0 }}
+        >
+          {ATTRIBUTION}
+        </p>
+
+        {/* Arrow + CTA */}
+        <div
+          className="flex items-center justify-end gap-3 transition-opacity duration-700"
+          style={{ opacity: showAttr ? 1 : 0 }}
+        >
+          <span
+            className="text-[13px] tracking-[0.3em] uppercase text-amber-300/30"
+            style={{ fontFamily: 'var(--font-hand), cursive' }}
+          >
+            Click to read
+          </span>
+          {/* Animated arrow pointing right toward the book */}
+          <svg
+            className="w-16 h-5 text-amber-400/25"
+            viewBox="0 0 64 20"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M0 10 Q20 8 48 10"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              fill="none"
+              style={{
+                strokeDasharray: 52,
+                strokeDashoffset: 0,
+                animation: 'arrowDraw 1.2s ease forwards, arrowPulse 2s 1.2s ease-in-out infinite',
+              }}
+            />
+            <path
+              d="M42 4 L56 10 L42 16"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </svg>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const FlipPage = forwardRef<HTMLDivElement, { children: ReactNode; className?: string; 'data-density'?: 'soft' | 'hard' }>((props, ref) => {
   const { children, className, 'data-density': density = 'soft' } = props;
   return (
@@ -78,12 +166,8 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
 
   const handleOpenBook = useCallback(() => {
     setShowBook(true);
-    // Give React one frame to mount the flip book before calling flipNext
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        bookRef.current?.pageFlip().flipNext();
-      });
-    });
+    // Library is always mounted so flipNext() works immediately — no init delay
+    bookRef.current?.pageFlip().flipNext();
   }, []);
 
   const onFlip = useCallback((e: any) => {
@@ -111,8 +195,8 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
   return (
     <div className="relative flex w-full flex-col items-center justify-center p-4">
 
-      {/* Mode indicator with keyboard shortcuts */}
-      {editable && (
+      {/* Mode indicator — only after the book is opened */}
+      {editable && showBook && (
         <div className="mb-4 flex items-center gap-1">
           <button
             onClick={() => switchMode(false)}
@@ -142,46 +226,35 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
         </div>
       )}
 
-      {/* ── Closed-book cover card ───────────────────────────────────────── */}
-      {!showBook && (
-        <div
-          className="relative cursor-pointer group rounded-sm overflow-hidden shadow-[0_50px_100px_-50px_rgba(0,0,0,0.9)]"
-          style={{ width: '550px', height: '750px' }}
-          onClick={handleOpenBook}
-        >
-          <CoverPage title={title} coverImage={coverImage} penName={penName} />
-          {/* Hover overlay */}
-          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-all duration-300" />
-          {/* Open hint */}
-          <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-7 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <span className="text-[10px] tracking-[0.45em] uppercase text-amber-200/80 font-bold">
-              Open Book
-            </span>
-          </div>
-        </div>
-      )}
+      {/* ── Book wrapper — HTMLFlipBook is always mounted so the library stays
+           initialized. The cover overlay sits on top when the book is closed,
+           and flipNext() fires instantly (no init wait) when the user opens it. ── */}
+      <div className="relative">
 
-      {/* ── Flip book ─────────────────────────────────────────────────────── */}
-      {showBook && <div
-        className="relative shadow-[0_50px_100px_-50px_rgba(0,0,0,1)] rounded-sm overflow-visible"
-        ref={(node) => {
-          // react-pageflip reparents FlipPage DOM nodes internally.
-          // When React unmounts (new book, mode switch, Fast Refresh), it
-          // walks the fiber tree and calls removeChild on the original parent.
-          // But those nodes now live under react-pageflip's internal container,
-          // so removeChild throws NotFoundError.
-          // Patch removeChild on this container (and any child that React uses
-          // as a parent) to silently handle missing nodes.
-          if (node && !(node as any).__rcPatched) {
-            (node as any).__rcPatched = true;
-            const orig = node.removeChild.bind(node);
-            node.removeChild = function <T extends Node>(child: T): T {
-              if (child.parentNode !== node) return child;
-              return orig(child);
-            };
-            // Also patch all current and future child divs (react-pageflip
-            // creates wrapper divs that React may also try to clean up).
-            const observer = new MutationObserver(() => {
+        {/* Flip book — always in the DOM; hidden via opacity when showing cover card */}
+        <div
+          className="relative shadow-[0_50px_100px_-50px_rgba(0,0,0,1)] rounded-sm overflow-visible"
+          style={{ opacity: showBook ? 1 : 0, pointerEvents: showBook ? 'auto' : 'none' }}
+          ref={(node) => {
+            if (node && !(node as any).__rcPatched) {
+              (node as any).__rcPatched = true;
+              const orig = node.removeChild.bind(node);
+              node.removeChild = function <T extends Node>(child: T): T {
+                if (child.parentNode !== node) return child;
+                return orig(child);
+              };
+              const observer = new MutationObserver(() => {
+                node.querySelectorAll('div').forEach((div) => {
+                  if ((div as any).__rcPatched) return;
+                  (div as any).__rcPatched = true;
+                  const origDiv = div.removeChild.bind(div);
+                  div.removeChild = function <T extends Node>(child: T): T {
+                    if (child.parentNode !== div) return child;
+                    return origDiv(child);
+                  };
+                });
+              });
+              observer.observe(node, { childList: true, subtree: true });
               node.querySelectorAll('div').forEach((div) => {
                 if ((div as any).__rcPatched) return;
                 (div as any).__rcPatched = true;
@@ -191,67 +264,72 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
                   return origDiv(child);
                 };
               });
-            });
-            observer.observe(node, { childList: true, subtree: true });
-            // Run once immediately for existing children
-            node.querySelectorAll('div').forEach((div) => {
-              if ((div as any).__rcPatched) return;
-              (div as any).__rcPatched = true;
-              const origDiv = div.removeChild.bind(div);
-              div.removeChild = function <T extends Node>(child: T): T {
-                if (child.parentNode !== div) return child;
-                return origDiv(child);
-              };
-            });
-          }
-        }}
-      >
-
-        {/* @ts-ignore */}
-        <HTMLFlipBook
-          key={bookKey}
-          width={550}
-          height={750}
-          size="fixed"
-          minWidth={315}
-          maxWidth={1000}
-          minHeight={400}
-          maxHeight={1533}
-          maxShadowOpacity={0.8}
-          showCover={true}
-          mobileScrollSupport={true}
-          onFlip={onFlip}
-          className="flip-book-canvas"
-          ref={bookRef}
-          startPage={currentPageIndex}
-          drawShadow={true}
-          flippingTime={650}
-          usePortrait={false}
-          startZIndex={0}
-          autoSize={true}
-          clickEventForward={true}
-          useMouseEvents={!isEditMode}
-          swipeDistance={30}
-          showPageCorners={!isEditMode}
-          disableFlipByClick={isEditMode}
+            }
+          }}
         >
-          {/* Cover page — always the first page, shown full-width as a closed book cover */}
-          <FlipPage key="cover" data-density="hard">
-            <CoverPage title={title} coverImage={coverImage} penName={penName} />
-          </FlipPage>
-
-          {pages.map((page, idx) => (
-            <FlipPage key={page.id}>
-              <Page
-                pageId={page.id}
-                side={idx % 2 === 0 ? 'left' : 'right'}
-                editable={editable && isEditMode}
-              />
+          {/* @ts-ignore */}
+          <HTMLFlipBook
+            key={bookKey}
+            width={550}
+            height={750}
+            size="fixed"
+            minWidth={315}
+            maxWidth={1000}
+            minHeight={400}
+            maxHeight={1533}
+            maxShadowOpacity={0.8}
+            showCover={true}
+            mobileScrollSupport={true}
+            onFlip={onFlip}
+            className="flip-book-canvas"
+            ref={bookRef}
+            startPage={currentPageIndex}
+            drawShadow={true}
+            flippingTime={650}
+            usePortrait={false}
+            startZIndex={0}
+            autoSize={true}
+            clickEventForward={true}
+            useMouseEvents={!isEditMode}
+            swipeDistance={30}
+            showPageCorners={!isEditMode}
+            disableFlipByClick={isEditMode}
+          >
+            <FlipPage key="cover" data-density="hard">
+              <CoverPage title={title} coverImage={coverImage} penName={penName} />
             </FlipPage>
-          ))}
-        </HTMLFlipBook>
+            {pages.map((page, idx) => (
+              <FlipPage key={page.id}>
+                <Page
+                  pageId={page.id}
+                  side={idx % 2 === 0 ? 'left' : 'right'}
+                  editable={editable && isEditMode}
+                />
+              </FlipPage>
+            ))}
+          </HTMLFlipBook>
+        </div>
 
-      </div>}
+        {/* Quote panel — left half, visible only when book is closed */}
+        {!showBook && <QuotePanel />}
+
+        {/* Cover card overlay — sits over the right half of the book container
+            (exactly where the library places the cover page at spread 0) */}
+        {!showBook && (
+          <div
+            className="absolute inset-y-0 right-0 cursor-pointer group rounded-sm overflow-hidden shadow-[0_50px_100px_-50px_rgba(0,0,0,0.9)]"
+            style={{ width: '550px' }}
+            onClick={handleOpenBook}
+          >
+            <CoverPage title={title} coverImage={coverImage} penName={penName} />
+            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-all duration-300" />
+            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center pb-7 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <span className="text-[10px] tracking-[0.45em] uppercase text-amber-200/80 font-bold">Open Book</span>
+            </div>
+          </div>
+        )}
+
+      </div>
 
       {/* Navigation — only shown when the book is open */}
       {showBook && <div className="mt-8 flex items-center gap-8 bg-black/20 backdrop-blur-sm px-8 py-3 rounded-full border border-white/5 transition-all hover:bg-black/30 group">
@@ -296,6 +374,14 @@ export function BookViewer({ editable = true }: { editable?: boolean }) {
         }
         .--shadow {
           background: rgba(0, 0, 0, 0.55) !important;
+        }
+        @keyframes arrowDraw {
+          from { stroke-dashoffset: 52; }
+          to   { stroke-dashoffset: 0; }
+        }
+        @keyframes arrowPulse {
+          0%, 100% { opacity: 1; transform: translateX(0); }
+          50%       { opacity: 0.5; transform: translateX(4px); }
         }
       `}</style>
     </div>

@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthModal } from "@/components/AuthModal";
 import { CustomCursor } from "@/components/CustomCursor";
+import { FeaturesShowcase } from "@/components/FeaturesShowcase";
 
 export default function LandingPage() {
   const { data: session, status } = useSession();
@@ -161,6 +162,9 @@ export default function LandingPage() {
         </motion.div>
 
       </main>
+
+      {/* Features Showcase */}
+      <FeaturesShowcase />
 
       {/* Public Rack Section */}
       <section className="relative z-10 px-8 pb-40 max-w-7xl mx-auto">
